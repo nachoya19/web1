@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El oraculo</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <div class="contenedor">
+        <h1>El oraculo de numeros</h1>
+        <p class="descripcion">He pensado un número secreto entre 1 y 100. ¿Podrás adivinarlo en 7 intentos?</p>
+
+        <div class="caja-juego">
+            <label for="numero-usuario">Elige un número (1–100):</label>
+            <div class="fila-control">
+                <input type="number" id="numero-usuario" min="1" max="100" placeholder="1-100">
+                <button id="btn-adivinar">Consultar</button>
+            </div>
+        </div>
+
+        <p id="mensaje-oraculo" class="mensaje"></p>
+        <p id="marcador-intentos" class="marcador">Intentos: 0 / 7</p>
+        <p id="historial-intentos" class="historial"></p>
+
+        <button id="btn-reiniciar" class="btn-secundario">Reset</button>
+    </div>
+</body>
+
+</html>
