@@ -37,6 +37,12 @@ botonReiniciar.addEventListener("click", (event) =>{
    texto.textContent = "";
 });
 
+document.addEventListener("keydown", (event) =>{
+    if(event.key === "n"){
+        document.body.classList.toggle("modo-oscuro");
+    }
+})
+
 function comprobarGanador() {
     let rondaGanada = false;
 
