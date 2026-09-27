@@ -64,13 +64,22 @@ function comprobarGanador() {
 
     if (rondaGanada) {
         juegoActivo = false;
-        texto.textContent = `¡Ha ganado ${turno}! 🎉`;
+
+        texto.innerHTML = "";
+        const spanResultado = document.createElement("span");
+        spanResultado.style.fontWeight = "bold";
+        spanResultado.textContent = `¡Ha ganado ${turno}! 🎉`;
+        texto.appendChild(spanResultado);
         return;
     }
 
     // Comprobar si hay empate (si el tablero no incluye ningún string vacío)
     if (!tablero.includes("")) {
         juegoActivo = false;
-        texto.textContent = "¡Empate! 🤝";
+
+        texto.innerHTML = "";
+        const spanEmpate = document.createElement("span");
+        spanEmpate.textContent = "¡Empate! 🤝";
+        texto.appendChild(spanEmpate);
     }
 }
