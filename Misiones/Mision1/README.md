@@ -3,12 +3,14 @@
 Misión M1 · El Despertar del DOM — Web Development I.
 
 ## Cómo probarlo
-Abre el archivo `index.html` en el navegador (o utiliza Live Server en VS Code). Haz clic en las casillas del tablero para alternar entre ❌ y ⭕️. El juego detectará automáticamente las líneas ganadoras o el empate, y podrás reiniciar la partida con el botón inferior. 
+Abre el archivo `index.html` en el navegador. Haz clic en las casillas para jugar. 
+* **Marcador:** El sistema cuenta las victorias en tiempo real.
 * **Tecla secreta:** Pulsa la tecla **"n"** para activar o desactivar el modo oscuro.
+* **Reinicio:** Utiliza el botón inferior para limpiar el tablero.
 
 ## Uso de IA
-No se ha utilizado ninguna inteligencia artificial para desarrollar la lógica, estructura o diseño de este proyecto. Todo el código de HTML, CSS y JavaScript ha sido escrito de forma puramente manual para entender la sintaxis, la manipulación del DOM y el flujo de eventos. Como máximo, se han consultado manuales de referencia de JavaScript para repasar la sintaxis de métodos nativos y propiedades de eventos.
+No se ha utilizado ninguna inteligencia artificial para desarrollar la lógica, estructura o diseño base de este proyecto. Todo el código de HTML, CSS y JavaScript ha sido escrito de forma manual para comprender la manipulación del DOM, el flujo de eventos y la gestión de estados. Como máximo, se han consultado manuales de referencia para verificar sintaxis de métodos nativos y propiedades de eventos. Tambien se ha usado para redactar el readme jeje.
 
 ## Autopsia
-1. Guardo la memoria y el estado del juego en un array de JavaScript (`tablero`) en lugar de leer el contenido visual de los botones del DOM cada vez que hay que comprobar una jugada. Descarté usar el DOM como fuente de verdad porque resulta mucho más frágil y complica innecesariamente la validación de las combinaciones ganadoras.
-2. Utilizo un bucle `for...of` para recorrer las casillas y asociarles un `addEventListener` dinámico, manteniendo el HTML completamente limpio de atributos de comportamiento. Descarté utilizar controladores de eventos en línea (`onclick="..."`) porque violan directamente la rúbrica de la asignatura y acoplan la estructura con la lógica.
+1. **El array como fuente de verdad:** Se ha optado por mantener el estado del juego en un array de JavaScript (`tablero`) en lugar de consultar directamente el DOM. Esto simplifica enormemente la comprobación de las combinaciones ganadoras y evita errores derivados de leer contenido visual frágil.
+2. **Listeners dinámicos frente a controladores en línea:** Se recorren las casillas mediante un bucle `for...of` para asignarles un `addEventListener` de forma limpia, manteniendo el archivo HTML completamente libre de atributos `onclick` y respetando la separación estricta de responsabilidades.
