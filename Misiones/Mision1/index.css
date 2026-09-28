@@ -1,134 +1,162 @@
+:root {
+    /* Tema Pastel (Modo Día por defecto) */
+    --bg-page: #fbf7fc;
+    --text-color: #4a4252;
+    --title-color: #8c73aa;
+    --title-shadow: none;
+    
+    --card-bg: #ffffff;
+    --card-border: #e3d7f5;
+    --card-shadow: 0 10px 30px rgba(140, 115, 170, 0.15);
+    
+    --casilla-bg: #faf7fd;
+    --casilla-border: #dcd0ef;
+    --casilla-color: #4a4252;
+    --casilla-hover-bg: #efe7fa;
+    --casilla-hover-border: #bfa5e6;
+    --casilla-hover-shadow: 0 4px 12px rgba(191, 165, 230, 0.35);
+    
+    --btn-bg: #bca0dc;
+    --btn-color: #ffffff;
+    --btn-border: #bca0dc;
+    --btn-hover-bg: #aa89ce;
+    --btn-shadow: 0 4px 14px rgba(188, 160, 220, 0.35);
+    
+    --msg-color: #e07a93;
+    --msg-shadow: none;
+}
+
+/* Tema Neón + Aurelion Sol (Modo Oscuro con tecla 'n') */
+body.modo-oscuro {
+    --text-color: #e6f9ff;
+    --title-color: #00f3ff;
+    --title-shadow: 0 0 10px #00f3ff, 0 0 25px rgba(0, 243, 255, 0.6);
+    
+    --card-bg: rgba(10, 12, 26, 0.88);
+    --card-border: rgba(0, 243, 255, 0.4);
+    --card-shadow: 0 0 30px rgba(0, 243, 255, 0.2), inset 0 0 15px rgba(0, 243, 255, 0.05);
+    
+    --casilla-bg: rgba(22, 25, 48, 0.9);
+    --casilla-border: rgba(157, 0, 255, 0.5);
+    --casilla-color: #ffffff;
+    --casilla-hover-bg: rgba(35, 40, 75, 0.95);
+    --casilla-hover-border: #00f3ff;
+    --casilla-hover-shadow: 0 0 15px #00f3ff;
+    
+    --btn-bg: transparent;
+    --btn-color: #ffffff;
+    --btn-border: #9d00ff;
+    --btn-hover-bg: #9d00ff;
+    --btn-shadow: 0 0 20px #9d00ff, 0 0 40px rgba(157, 0, 255, 0.6);
+    
+    --msg-color: #ff0055;
+    --msg-shadow: 0 0 12px rgba(255, 0, 85, 0.8);
+
+    background: linear-gradient(rgba(5, 6, 15, 0.72), rgba(5, 6, 15, 0.72)),
+                url("https://ddragon.leagueoflegends.com/cdn/img/champion/splash/AurelionSol_0.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    margin: 0;
-    background-color: #f0f2f5;
-    color: #333;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-color);
+    transition: background 0.4s ease, color 0.3s ease;
+    text-align: center;
+    gap: 20px;
 }
 
 h1 {
-    margin-bottom: 10px;
+    font-size: 2.2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--title-color);
+    text-shadow: var(--title-shadow);
+    transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
-.marcador {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-.card-puntuacion {
-    padding: 8px 16px;
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.05);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease;
-}
-
-.card-puntuacion:hover {
-    transform: scale(1.05);
-}
-
-/* Tablero en Grid con animaciones */
 .tablero {
     display: grid;
-    grid-template-columns: repeat(3, 100px);
-    grid-template-rows: repeat(3, 100px);
-    gap: 8px;
-    background-color: #333;
-    padding: 8px;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    width: 320px;
+    padding: 18px;
+    background: var(--card-bg);
+    border: 2px solid var(--card-border);
+    border-radius: 18px;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
 }
 
 .casilla {
-    background-color: #fff;
-    border: none;
-    font-size: 2.5rem;
-    font-weight: bold;
+    aspect-ratio: 1;
+    font-size: 2.8rem;
     cursor: pointer;
-    border-radius: 6px;
+    background: var(--casilla-bg);
+    border: 2px solid var(--casilla-border);
+    border-radius: 12px;
+    color: var(--casilla-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition: all 0.2s ease;
 }
 
-/* Animación al pasar el ratón por las casillas */
 .casilla:hover {
-    background-color: #e4e6eb;
-    transform: scale(0.98);
+    background: var(--casilla-hover-bg);
+    border-color: var(--casilla-hover-border);
+    box-shadow: var(--casilla-hover-shadow);
+    transform: translateY(-2px);
 }
 
-/* Botón de reinicio */
+.casilla:active {
+    transform: scale(0.96);
+}
+
+#texto {
+    min-height: 1.8rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--msg-color);
+    text-shadow: var(--msg-shadow);
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
 #reinicio {
-    margin-top: 20px;
-    padding: 10px 20px;
+    padding: 12px 28px;
     font-size: 1rem;
-    font-weight: bold;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--btn-color);
+    background: var(--btn-bg);
+    border: 2px solid var(--btn-border);
+    border-radius: 30px;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: var(--btn-shadow);
+    transition: all 0.25s ease;
 }
 
 #reinicio:hover {
-    background-color: #0056b3;
+    background: var(--btn-hover-bg);
+    border-color: var(--btn-border);
+    box-shadow: var(--btn-shadow);
     transform: scale(1.05);
 }
 
-/* Párrafo de texto y resultados */
-#texto {
-    margin-top: 15px;
-    font-size: 1.2rem;
-    min-height: 30px;
+#reinicio:active {
+    transform: scale(0.98);
 }
-
-/* Modo oscuro (activado con la tecla secreta "n") */
-body.modo-oscuro {
-    background-color: #121212;
-    color: #e0e0e0;
-}
-
-body.modo-oscuro .tablero {
-    background-color: #2c2c2c;
-}
-
-body.modo-oscuro .casilla {
-    background-color: #1e1e1e;
-    color: #ffffff;
-}
-
-body.modo-oscuro .casilla:hover {
-    background-color: #2a2a2a;
-}
-
-body.modo-oscuro .card-puntuacion {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-#turno-contenedor {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 12px;
-}
-
-.casilla.casilla-ganadora {
-    background-color: #28a745;
-    color: #ffffff;
-    transform: scale(1.05);
-}
-
-body.modo-oscuro .casilla.casilla-ganadora {
-    background-color: #1e7e34;
-    color: #ffffff;
-}
-
