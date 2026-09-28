@@ -1,4 +1,12 @@
 const tableroElemento = document.querySelector("#tablero-juego");
+
+for (let i = 0; i < 9; i++) {
+    const boton = document.createElement("button");
+    boton.classList.add("casilla");
+    boton.dataset.index = i;
+    tableroElemento.appendChild(boton);
+}
+
 const casillas = document.querySelectorAll(".casilla");
 const botonReiniciar = document.querySelector("#reinicio");
 const texto = document.querySelector("#texto");
@@ -19,9 +27,13 @@ let turno = "❌";
 let juegoActivo = true;
 let tablero = [...TABLERO_INICIAL];
 
-let victoriasX = 0;
-let victoriasO = 0;
-let empate = 0;
+function mostrarMensaje(mensaje) {
+    texto.innerHTML = "";
+    const spanResultado = document.createElement("span");
+    spanResultado.style.fontWeight = "bold";
+    spanResultado.textContent = mensaje;
+    texto.appendChild(spanResultado);
+}
 
 tableroElemento.addEventListener("click", (event) => {
     const casillaPulsada = event.target;
@@ -92,11 +104,7 @@ function comprobarGanador() {
             casillas[index].classList.add("casilla-ganadora");
         }
 
-        texto.innerHTML = "";
-        const spanResultado = document.createElement("span");
-        spanResultado.style.fontWeight = "bold";
-        spanResultado.textContent = `¡Ha ganado ${turno}! 🎉`;
-        texto.appendChild(spanResultado);
+        mostrarMensaje(`¡Ha ganado ${turno}! 🎉`);
         return;
     }
 
@@ -105,9 +113,6 @@ function comprobarGanador() {
         empate++;
         empatesEl.textContent = empate;
 
-        texto.innerHTML = "";
-        const spanEmpate = document.createElement("span");
-        spanEmpate.textContent = "¡Empate! 🤝";
-        texto.appendChild(spanEmpate);
+        mostrarMensaje("¡Empate! 🤝");
     }
 }
