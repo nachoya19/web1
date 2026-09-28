@@ -1,14 +1,19 @@
-const casillas = document.querySelectorAll(".casilla")
-const botonReiniciar = document.querySelector("#reinicio")
-const texto = document.querySelector("#texto")
-const TABLERO_INICIAL = ["","","","","","","","",""];
-const puntuacionX = document.querySelector("#puntuacionX")
-const puntuacionO = document.querySelector("#puntuacionO")
-const empates = document.querySelector("#empates")
+const tableroElemento = document.querySelector("#tablero-juego");
+const casillas = document.querySelectorAll(".casilla");
+const botonReiniciar = document.querySelector("#reinicio");
+const texto = document.querySelector("#texto");
+const turnoActualEl = document.querySelector("#turno-actual");
 
+const puntuacionX = document.querySelector("#puntuacionX");
+const puntuacionO = document.querySelector("#puntuacionO");
+const empatesEl = document.querySelector("#empates");
 
-
-const casosGanadores =[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; 
+const TABLERO_INICIAL = ["", "", "", "", "", "", "", "", ""];
+const casosGanadores = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
+];
 
 let turno = "❌";
 let juegoActivo = true;
@@ -18,55 +23,56 @@ let victoriasX = 0;
 let victoriasO = 0;
 let empate = 0;
 
-for (const casilla of casillas) {
-    casilla.addEventListener("click", (event) => {
-    const indice = Number(event.target.dataset.index);
+tableroElemento.addEventListener("click", (event) => {
+    const casillaPulsada = event.target;
 
-    if(juegoActivo && tablero[indice] === ""){
+    if (!casillaPulsada.classList.contains("casilla")) return;
+
+    const indice = Number(casillaPulsada.dataset.index);
+
+    if (juegoActivo && tablero[indice] === "") {
         tablero[indice] = turno;
-        event.target.textContent = turno;
+        casillaPulsada.textContent = turno;
         comprobarGanador();
-        if(turno === "❌"){
-            turno = "⭕️";
-        }
-        else{
-            turno = "❌";
-        }
-        }
-    });
-}
 
-botonReiniciar.addEventListener("click", (event) =>{
-   tablero = [...TABLERO_INICIAL];
-   
-   for (const casilla of casillas){
-    casilla.textContent = "";
-   }
-   turno = "❌";
-   juegoActivo = true;
-   texto.textContent = "";
+        if (juegoActivo) {
+            turno = turno === "❌" ? "⭕️" : "❌";
+            turnoActualEl.textContent = turno;
+        }
+    }
 });
 
-document.addEventListener("keydown", (event) =>{
-    if(event.key === "n"){
+function reiniciarTablero() {
+    tablero = [...TABLERO_INICIAL];
+    juegoActivo = true;
+    turno = "❌";
+    turnoActualEl.textContent = turno;
+    texto.textContent = "";
+
+    for (const casilla of casillas) {
+        casilla.textContent = "";
+        casilla.classList.remove("casilla-ganadora");
+    }
+}
+
+botonReiniciar.addEventListener("click", reiniciarTablero);
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "n") {
         document.body.classList.toggle("modo-oscuro");
     }
-})
+});
 
 function comprobarGanador() {
     let rondaGanada = false;
+    let combinacionGanadora = [];
 
-    // Recorremos cada combinación ganadora
     for (const combinacion of casosGanadores) {
-        const a = combinacion[0];
-        const b = combinacion[1];
-        const c = combinacion[2];
+        const [a, b, c] = combinacion;
 
-
-
-        // Si las tres posiciones son iguales y diferentes de nada
         if (tablero[a] === tablero[b] && tablero[b] === tablero[c] && tablero[a] !== "") {
             rondaGanada = true;
+            combinacionGanadora = combinacion;
             break;
         }
     }
@@ -74,13 +80,16 @@ function comprobarGanador() {
     if (rondaGanada) {
         juegoActivo = false;
 
-        if(turno ===  "❌"){
+        if (turno === "❌") {
             victoriasX++;
             puntuacionX.textContent = victoriasX;
-        }
-        else{
+        } else {
             victoriasO++;
             puntuacionO.textContent = victoriasO;
+        }
+
+        for (const index of combinacionGanadora) {
+            casillas[index].classList.add("casilla-ganadora");
         }
 
         texto.innerHTML = "";
@@ -91,12 +100,10 @@ function comprobarGanador() {
         return;
     }
 
-    // Comprobar si hay empate (si el tablero no incluye ningún string vacío)
     if (!tablero.includes("")) {
         juegoActivo = false;
-
         empate++;
-        empates.textContent = empate;
+        empatesEl.textContent = empate;
 
         texto.innerHTML = "";
         const spanEmpate = document.createElement("span");

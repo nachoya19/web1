@@ -114,3 +114,21 @@ body.modo-oscuro .casilla:hover {
 body.modo-oscuro .card-puntuacion {
     background: rgba(255, 255, 255, 0.1);
 }
+
+#turno-contenedor {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.casilla.casilla-ganadora {
+    background-color: #28a745;
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+body.modo-oscuro .casilla.casilla-ganadora {
+    background-color: #1e7e34;
+    color: #ffffff;
+}
+
