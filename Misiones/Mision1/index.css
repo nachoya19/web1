@@ -160,3 +160,67 @@ h1 {
 #reinicio:active {
     transform: scale(0.98);
 }
+
+
+.marcador {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    z-index: 1; 
+}
+
+.card-puntuacion {
+    background: var(--card-bg);
+    border: 2px solid var(--card-border);
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+#turno-contenedor {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    background: var(--card-bg);
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    z-index: 1;
+}
+
+:root {
+    --ganadora-bg: #dcfce7;
+    --ganadora-border: #22c55e;
+    --ganadora-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+}
+
+body.modo-oscuro {
+    --ganadora-bg: rgba(57, 255, 20, 0.2);
+    --ganadora-border: #39ff14;
+    --ganadora-shadow: 0 0 30px #39ff14, inset 0 0 15px rgba(57, 255, 20, 0.3);
+}
+
+.casilla.casilla-ganadora {
+    background: var(--ganadora-bg);
+    border-color: var(--ganadora-border);
+    box-shadow: var(--ganadora-shadow);
+    transform: scale(1.08);
+    z-index: 10;
+    animation: pulsarVictoria 1.5s infinite alternate;
+}
+
+@keyframes pulsarVictoria {
+    from {
+        box-shadow: var(--ganadora-shadow);
+        transform: scale(1.05);
+    }
+    to {
+        box-shadow: 0 0 40px var(--ganadora-border);
+        transform: scale(1.1);
+    }
+}
