@@ -1,5 +1,4 @@
 :root {
-    /* Tema Pastel (Modo Día por defecto) */
     --bg-page: #fbf7fc;
     --text-color: #4a4252;
     --title-color: #8c73aa;
@@ -24,6 +23,10 @@
     
     --msg-color: #e07a93;
     --msg-shadow: none;
+
+    --ganadora-bg: #dcfce7;
+    --ganadora-border: #22c55e;
+    --ganadora-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
 }
 
 /* Tema Neón + Aurelion Sol (Modo Oscuro con tecla 'n') */
@@ -193,11 +196,6 @@ h1 {
     z-index: 1;
 }
 
-:root {
-    --ganadora-bg: #dcfce7;
-    --ganadora-border: #22c55e;
-    --ganadora-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
-}
 
 body.modo-oscuro {
     --ganadora-bg: rgba(57, 255, 20, 0.2);

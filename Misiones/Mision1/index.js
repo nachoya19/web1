@@ -40,30 +40,37 @@ let estadoJuego = {
 
 // Función que crea un nodo nuevo al vuelo para dar el resultado
 function mostrarMensaje(mensaje) {
-    texto.innerHTML = "";
+    texto.textContent = ""; // Usamos textContent en lugar de innerHTML para ser más limpios
     const spanResultado = document.createElement("span");
     spanResultado.style.fontWeight = "bold";
     spanResultado.textContent = mensaje;
     texto.appendChild(spanResultado);
 }
 
-// La magia para saber si alguien ha hecho 3 en raya
-function comprobarGanador() {
-    let rondaGanada = false;
-    let combinacionGanadora = [];
-
+// Lógica pura: la magia para saber si alguien ha hecho 3 en raya (sin tocar la pantalla)
+function evaluarEstadoPartida() {
     // Repasamos cada combinación ganadora posible
     for (const combinacion of casosGanadores) {
         const [a, b, c] = combinacion;
 
         if (tablero[a] === tablero[b] && tablero[b] === tablero[c] && tablero[a] !== "") {
-            rondaGanada = true;
-            combinacionGanadora = combinacion;
-            break;
+            return { hayGanador: true, combinacion: combinacion };
         }
     }
+    
+    // Si el tablero se llena y no hay ganador, lo damos por empate
+    if (!tablero.includes("")) {
+        return { hayGanador: false, empate: true };
+    }
+    
+    return { hayGanador: false, empate: false };
+}
 
-    if (rondaGanada) {
+// Interfaz: lee el estado del juego y actualiza el marcador y los textos
+function gestionarResultados() {
+    const estado = evaluarEstadoPartida();
+
+    if (estado.hayGanador) {
         juegoActivo = false;
 
         // Sumamos el punto a quien toque y actualizamos el texto
@@ -76,7 +83,7 @@ function comprobarGanador() {
         }
 
         // Hacemos brillar las 3 casillas que han ganado
-        for (const index of combinacionGanadora) {
+        for (const index of estado.combinacion) {
             casillas[index].classList.add("casilla-ganadora");
         }
 
@@ -84,8 +91,7 @@ function comprobarGanador() {
         return;
     }
 
-    // Si el tablero se llena y no hay ganador, lo damos por empate
-    if (!tablero.includes("")) {
+    if (estado.empate) {
         juegoActivo = false;
         estadoJuego.empates++;
         empatesEl.textContent = estadoJuego.empates;
@@ -121,7 +127,9 @@ tableroElemento.addEventListener("click", (event) => {
     if (juegoActivo && tablero[indice] === "") {
         tablero[indice] = turno;
         casillaPulsada.textContent = turno;
-        comprobarGanador();
+        
+        // Llamamos a la interfaz para comprobar victorias
+        gestionarResultados();
 
         // Cambiamos el turno si la partida no ha terminado
         if (juegoActivo) {
@@ -135,6 +143,9 @@ botonReiniciar.addEventListener("click", reiniciarTablero);
 
 // Reto bonus: cambiamos toda la temática al pulsar la 'n'
 document.addEventListener("keydown", (event) => {
+    // Guarda de seguridad: si mantienen el dedo en la tecla, ignoramos la repetición
+    if (event.repeat) return; 
+    
     if (event.key === "n") {
         document.body.classList.toggle("modo-oscuro");
     }
