@@ -45,6 +45,7 @@ function comprobarGanador() {
     let rondaGanada = false;
     let combinacionGanadora = [];
 
+    // Bucle para comprobar si las posiciones actuales del tablero coinciden con una victoria
     for (const combinacion of casosGanadores) {
         const [a, b, c] = combinacion;
 
@@ -58,6 +59,7 @@ function comprobarGanador() {
     if (rondaGanada) {
         juegoActivo = false;
 
+        // Actualización del marcador leyendo del objeto de estado global
         if (turno === "❌") {
             estadoJuego.victoriasX++;
             puntuacionX.textContent = estadoJuego.victoriasX;
@@ -66,6 +68,7 @@ function comprobarGanador() {
             puntuacionO.textContent = estadoJuego.victoriasO;
         }
 
+        // Iluminamos la combinación ganadora
         for (const index of combinacionGanadora) {
             casillas[index].classList.add("casilla-ganadora");
         }
