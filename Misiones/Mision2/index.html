@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Misión 2 - Anime API</title>
-  <link rel="stylesheet" href="src/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Misión 2 - Async Odyssey</title>
+  <link rel="stylesheet" href="src/style.css" />
 </head>
 <body>
   <div id="app">
@@ -13,19 +13,27 @@
     </header>
 
     <main>
+      <!-- Barra de búsqueda -->
       <form id="search-form" class="search-form">
         <input 
           type="text" 
           id="search-input" 
           class="search-input" 
-          placeholder="Buscar anime (ej. Naruto, Attack on Titan)..." 
+          placeholder="Buscar anime..." 
           autocomplete="off"
         />
         <button type="submit" class="search-btn">Buscar</button>
       </form>
+
+      <!-- Contenedor para estados (cargando, error, vacío) -->
+      <div id="status-message" class="status-msg"></div>
+
+      <!-- Contenedor de las tarjetas de anime -->
+      <section id="anime-grid" class="anime-grid"></section>
     </main>
   </div>
 
-  <script type="module" src="/src/main.js"></script>
+  <!-- Enlace al módulo ES -->
+  <script type="module" src="src/index.js"></script>
 </body>
 </html>
