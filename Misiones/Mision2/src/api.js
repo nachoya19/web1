@@ -1,22 +1,35 @@
 // Servicio para consumir la API pública de Kitsu (Módulo API)
+import { obtenerDeCache, guardarEnCache } from './storage.js';
 
 const BASE_URL = 'https://kitsu.io/api/edge';
 const TRENDING_API_URL = `${BASE_URL}/trending/anime?page[limit]=10`;
 
 /**
- * Función auxiliar privada del módulo para realizar peticiones HTTP y procesar respuestas.
+ * Función auxiliar privada del módulo para realizar peticiones HTTP o devolver desde caché.
+ * Si los datos existen en localStorage, se recuperan al instante sin repetir el fetch (BONUS).
  * @param {string} url - URL a consultar
  * @returns {Promise<Array>} Lista de animes
  */
 async function realizarPeticion(url) {
+  // 1. Comprobamos si la petición ya está guardada en la caché local
+  const datosEnCache = obtenerDeCache(url);
+  if (datosEnCache) {
+    return datosEnCache;
+  }
+
+  // 2. Si no está en caché, realizamos la petición a la API
   const response = await fetch(url);
 
-  // fetch solo rechaza por fallos de red a nivel de socket; verificamos el status HTTP
+  // fetch solo rechaza por fallos de red; verificamos el status HTTP manualmente (Unidad 2, pág. 25)
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
 
   const data = await response.json();
+
+  // 3. Guardamos los datos en localStorage para no repetir la petición en el futuro
+  guardarEnCache(url, data.data);
+
   return data.data;
 }
 
