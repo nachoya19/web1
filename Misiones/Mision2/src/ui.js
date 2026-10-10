@@ -1,68 +1,95 @@
-// Módulo de interfaz de usuario (DOM y Renderizado)
-
-// Selección de elementos del DOM
-const container = document.querySelector('#anime-grid');
-const statusMessage = document.querySelector('#status-message');
-
 /**
- * Muestra el estado de carga en la interfaz.
- * @param {string} mensaje
+ * 1. Control de estado del botón de envío (evita clics duplicados)
  */
-export function mostrarCargando(mensaje = 'Cargando animes...') {
-  statusMessage.textContent = mensaje;
-  statusMessage.className = 'status-msg';
-  container.innerHTML = '';
+export function alternarBotonCarga(boton, cargando) {
+  if (!boton) return;
+  boton.disabled = cargando;
+  boton.textContent = cargando ? 'Buscando...' : 'Buscar';
 }
 
 /**
- * Muestra el estado de error en la interfaz.
- * @param {string} mensaje
+ * 2. Visualización de mensajes de estado (Cargando / Informativos)
  */
-export function mostrarError(mensaje) {
-  statusMessage.textContent = `Error: ${mensaje}`;
-  statusMessage.className = 'status-msg error';
-  container.innerHTML = '';
+export function mostrarEstado(contenedorEstado, mensaje) {
+  if (!contenedorEstado) return;
+  contenedorEstado.textContent = mensaje;
+  contenedorEstado.className = 'status-msg';
 }
 
 /**
- * Renderiza las tarjetas de anime en el DOM usando métodos de array (.map) y template literals.
- * Maneja también el estado de lista vacía.
- * @param {Array} listaAnimes
+ * 3. Visualización de errores con textContent (previene XSS en mensajes)
  */
-export function renderizarTarjetas(listaAnimes) {
-  if (!listaAnimes || listaAnimes.length === 0) {
-    statusMessage.textContent = 'No hay resultados disponibles.';
-    statusMessage.className = 'status-msg';
-    container.innerHTML = '';
+export function mostrarError(contenedorEstado, mensajeError) {
+  if (!contenedorEstado) return;
+  contenedorEstado.textContent = mensajeError;
+  contenedorEstado.className = 'status-msg error';
+}
+
+/**
+ * 4. Muestra la métrica calculada con reduce en la capa de lógica
+ */
+export function renderizarMetricas(contenedorStats, cantidad, mediaRating) {
+  if (!contenedorStats) return;
+
+  if (cantidad === 0) {
+    contenedorStats.textContent = '';
     return;
   }
 
-  // Limpiamos el mensaje de estado al mostrar datos con éxito
-  statusMessage.textContent = '';
+  const textoRating = mediaRating > 0 ? `★ ${mediaRating}% media` : 'Sin calificación media';
+  contenedorStats.textContent = `Mostrando ${cantidad} animes | Valoración promedio: ${textoRating}`;
+}
 
-  // Pipeline funcional: transformamos el array de objetos a un string HTML
-  const tarjetasHTML = listaAnimes
-    .map((item) => {
-      const { canonicalTitle, posterImage, synopsis, averageRating } = item.attributes;
+/**
+ * 5. Renderizado seguro en el DOM usando createElement y textContent
+ * Recibe el contenedor del grid y el array de animes ya normalizado por logic.js
+ */
+export function renderizarCatalogo(contenedorGrid, animes) {
+  if (!contenedorGrid) return;
+  
+  // Vaciamos el contenedor previo
+  contenedorGrid.replaceChildren();
 
-      const imagen = posterImage?.medium ?? 'https://via.placeholder.com/200x300';
-      const valoracion = averageRating ? `⭐️ ${averageRating}%` : 'Sin valoración';
-      const descripcion = synopsis
-        ? `${synopsis.slice(0, 110)}...`
-        : 'Sin sinopsis disponible.';
+  if (!animes || animes.length === 0) {
+    return;
+  }
 
-      return `
-        <article class="anime-card">
-          <img src="${imagen}" alt="${canonicalTitle}" loading="lazy" />
-          <div class="anime-card-content">
-            <h3>${canonicalTitle}</h3>
-            <span class="anime-rating">${valoracion}</span>
-            <p class="anime-synopsis">${descripcion}</p>
-          </div>
-        </article>
-      `;
-    })
-    .join('');
+  // Fragmento de documento para minimizar reflujos (reflow/layout) en el DOM
+  const fragmento = document.createDocumentFragment();
 
-  container.innerHTML = tarjetasHTML;
+  animes.forEach((anime) => {
+    const tarjeta = document.createElement('article');
+    tarjeta.className = 'anime-card';
+
+    // Imagen con fallback y alt seguro
+    const img = document.createElement('img');
+    img.src = anime.imagen;
+    img.alt = anime.titulo;
+    img.loading = 'lazy';
+
+    const info = document.createElement('div');
+    info.className = 'anime-card-content';
+
+    // Título seguro con textContent
+    const titulo = document.createElement('h3');
+    titulo.textContent = anime.titulo;
+
+    // Valoración
+    const rating = document.createElement('span');
+    rating.className = 'anime-rating';
+    rating.textContent = anime.rating !== null ? `★ ${anime.rating}%` : 'Sin calificación';
+
+    // Sinopsis truncada y segura
+    const sinopsis = document.createElement('p');
+    sinopsis.className = 'anime-synopsis';
+    sinopsis.textContent = anime.sinopsis.length > 120 
+      ? `${anime.sinopsis.slice(0, 120)}...` 
+      : anime.sinopsis;
+
+    info.append(titulo, rating, sinopsis);
+    tarjeta.append(img, info);
+    fragmento.appendChild(tarjeta);
+  });
+
+  contenedorGrid.appendChild(fragmento);
 }

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Misión 2 - Async Odyssey</title>
-  <link rel="stylesheet" href="src/style.css" />
+  <title>Kitsu Anime Radar - Async Odyssey</title>
+  <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
   <div id="app">
@@ -19,21 +19,24 @@
           type="text" 
           id="search-input" 
           class="search-input" 
-          placeholder="Buscar anime..." 
+          placeholder="Buscar anime (ej. Naruto, One Piece)..." 
           autocomplete="off"
         />
-        <button type="submit" class="search-btn">Buscar</button>
+        <button type="submit" id="search-btn" class="search-btn">Buscar</button>
       </form>
 
-      <!-- Contenedor para estados (cargando, error, vacío) -->
+      <!-- Contenedor para estados (cargando, error, sin resultados) -->
       <div id="status-message" class="status-msg"></div>
 
-      <!-- Contenedor de las tarjetas de anime -->
+      <!-- Métricas y resumen del catálogo (calculadas con reduce) -->
+      <div id="stats-info" class="status-msg" style="font-weight: 500; font-size: 15px;"></div>
+
+      <!-- Contenedor del grid de tarjetas -->
       <section id="anime-grid" class="anime-grid"></section>
     </main>
   </div>
 
-  <!-- Enlace al módulo ES -->
-  <script type="module" src="src/index.js"></script>
+  <!-- Enlace al módulo ES orquestador -->
+  <script type="module" src="/src/index.js"></script>
 </body>
 </html>

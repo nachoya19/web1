@@ -1,33 +1,59 @@
-// Módulo de almacenamiento local (Caché con localStorage y JSON)
+// Clave prefijo para no colisionar con otras apps en el mismo dominio
+const PREFIX = 'kitsu_cache_';
 
-const CACHE_PREFIX = 'anime_cache_';
+// Tiempo de vida de la caché: 20 minutos en milisegundos (20 * 60 * 1000)
+const TTL_MS = 20 * 60 * 1000;
 
 /**
- * Obtiene datos previamente cacheados en localStorage.
- * Envuelto en try/catch para evitar caídas si el JSON está corrupto (Unidad 2, pág. 27).
- * @param {string} clave - Identificador o URL de la petición
- * @returns {any|null} Datos deserializados o null si no existe o falla
+ * Guarda datos en localStorage con una marca de tiempo (timestamp)
+ * Solo guarda si los datos son un array válido.
  */
-export function obtenerDeCache(clave) {
+export function guardarEnCache(clave, datos) {
+  // Validación requerida por la rúbrica: no guardar si no es array
+  if (!Array.isArray(datos)) {
+    console.warn(`[Storage] Los datos para "${clave}" no son un array. Se descarta el guardado.`);
+    return;
+  }
+
+  const envoltorio = {
+    timestamp: Date.now(),
+    data: datos,
+  };
+
   try {
-    const registro = localStorage.getItem(`${CACHE_PREFIX}${clave}`);
-    return registro ? JSON.parse(registro) : null;
+    const jsonString = JSON.stringify(envoltorio);
+    localStorage.setItem(PREFIX + clave, jsonString);
   } catch (error) {
-    console.warn(`Error al leer "${clave}" de localStorage:`, error);
-    return null;
+    // Manejo de error típico: cuota excedida en localStorage
+    console.error(`[Storage] Error al guardar en localStorage:`, error.message);
   }
 }
 
 /**
- * Guarda datos en localStorage serializados a texto JSON.
- * Envuelto en try/catch por si la cuota de almacenamiento está llena (Unidad 2, pág. 28).
- * @param {string} clave - Identificador o URL de la petición
- * @param {any} datos - Información a almacenar
+ * Recupera datos de localStorage comprobando si han expirado (TTL)
+ * Devuelve el array de datos o null si expiró / no existe.
  */
-export function guardarEnCache(clave, datos) {
+export function obtenerDeCache(clave) {
   try {
-    localStorage.setItem(`${CACHE_PREFIX}${clave}`, JSON.stringify(datos));
+    const contenido = localStorage.getItem(PREFIX + clave);
+    if (!contenido) return null;
+
+    const { timestamp, data } = JSON.parse(contenido);
+
+    // Comprobamos si el tiempo actual supera el TTL fijado
+    const haCaducado = Date.now() - timestamp > TTL_MS;
+
+    if (haCaducado) {
+      console.log(`[Storage] La caché para "${clave}" ha caducado. Se renueva.`);
+      localStorage.removeItem(PREFIX + clave);
+      return null;
+    }
+
+    return Array.isArray(data) ? data : null;
   } catch (error) {
-    console.warn(`Error al guardar "${clave}" en localStorage:`, error);
+    // Si el JSON estaba corrupto, limpiamos la entrada por seguridad
+    console.error(`[Storage] Error al leer la caché para "${clave}":`, error.message);
+    localStorage.removeItem(PREFIX + clave);
+    return null;
   }
 }

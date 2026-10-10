@@ -1,52 +1,79 @@
-// Servicio para consumir la API pública de Kitsu (Módulo API)
-import { obtenerDeCache, guardarEnCache } from './storage.js';
+const BASE_URL = 'https://kitsu.app/api/edge';
 
-const BASE_URL = 'https://kitsu.io/api/edge';
-const TRENDING_API_URL = `${BASE_URL}/trending/anime?page[limit]=10`;
+// Variable para almacenar el AbortController de la petición activa
+let controladorActual = null;
 
 /**
- * Función auxiliar privada del módulo para realizar peticiones HTTP o devolver desde caché.
- * Si los datos existen en localStorage, se recuperan al instante sin repetir el fetch (BONUS).
- * @param {string} url - URL a consultar
- * @returns {Promise<Array>} Lista de animes
+ * Traduce códigos HTTP a mensajes amigables para el usuario
+ */
+function formatearErrorHttp(status) {
+  if (status === 404) return 'No se han encontrado animes con ese nombre.';
+  if (status === 429) return 'Límite de consultas superado. Espera unos segundos antes de reintentar.';
+  if (status >= 500) return 'El servidor de anime está experimentando problemas. Prueba en unos minutos.';
+  return `Error en la solicitud (Código ${status}).`;
+}
+
+/**
+ * Función central de petición que gestiona cancelación y validaciones
  */
 async function realizarPeticion(url) {
-  // 1. Comprobamos si la petición ya está guardada en la caché local
-  const datosEnCache = obtenerDeCache(url);
-  if (datosEnCache) {
-    return datosEnCache;
+  // 1. Si ya hay una petición en curso, la abortamos para evitar condiciones de carrera
+  if (controladorActual) {
+    controladorActual.abort();
   }
 
-  // 2. Si no está en caché, realizamos la petición a la API
-  const response = await fetch(url);
+  // 2. Creamos una nueva instancia de AbortController para esta petición
+  controladorActual = new AbortController();
 
-  // fetch solo rechaza por fallos de red; verificamos el status HTTP manualmente (Unidad 2, pág. 25)
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  try {
+    const respuesta = await fetch(url, {
+      signal: controladorActual.signal,
+      headers: {
+        'Accept': 'application/vnd.api+json',
+      },
+    });
+
+    // 3. fetch no rechaza por códigos 4xx/5xx; verificamos respuesta.ok manualmente
+    if (!respuesta.ok) {
+      throw new Error(formatearErrorHttp(respuesta.status));
+    }
+
+    const resultado = await respuesta.json();
+
+    // 4. Validamos que la API realmente haya devuelto el array esperado
+    if (!resultado || !Array.isArray(resultado.data)) {
+      throw new Error('La respuesta recibida no tiene el formato de datos esperado.');
+    }
+
+    return resultado.data;
+
+  } catch (error) {
+    // Si la petición fue abortada expresamente por una nueva búsqueda, relanzamos el AbortError
+    if (error.name === 'AbortError') {
+      throw error;
+    }
+
+    // Si hubo un fallo de conexión (ej. sin internet o bloqueo de red)
+    if (error instanceof TypeError) {
+      throw new Error('Error de conexión a internet. Comprueba tu red e inténtalo de nuevo.');
+    }
+
+    // Relanzamos cualquier error con mensaje ya formateado
+    throw error;
   }
-
-  const data = await response.json();
-
-  // 3. Guardamos los datos en localStorage para no repetir la petición en el futuro
-  guardarEnCache(url, data.data);
-
-  return data.data;
 }
 
 /**
- * Obtiene los animes en tendencia/populares.
- * @returns {Promise<Array>} Lista de animes populares
+ * Obtiene la lista de animes populares en tendencia
  */
-export async function obtenerAnimesPopulares() {
-  return realizarPeticion(TRENDING_API_URL);
+export async function obtenerPopulares() {
+  return await realizarPeticion(`${BASE_URL}/trending/anime`);
 }
 
 /**
- * Busca animes por texto.
- * @param {string} termino - Término de búsqueda ingresado por el usuario
- * @returns {Promise<Array>} Lista de animes que coinciden con el término
+ * Busca animes en Kitsu según el texto proporcionado
  */
-export async function buscarAnimes(termino) {
-  const url = `${BASE_URL}/anime?filter[text]=${encodeURIComponent(termino)}&page[limit]=10`;
-  return realizarPeticion(url);
+export async function buscarPorTexto(termino) {
+  const url = `${BASE_URL}/anime?filter[text]=${encodeURIComponent(termino)}`;
+  return await realizarPeticion(url);
 }
