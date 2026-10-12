@@ -6,125 +6,155 @@ import {
   contarPorEstado,
   ordenarPorRating,
   filtrarPorRatingMinimo,
+  filtrarPorFavoritos,
 } from './logic.js';
-import { guardarEnCache, obtenerDeCache } from './storage.js';
 import {
+  guardarEnCache,
+  obtenerDeCache,
+  alternarFavorito,
+  esFavorito,
+  obtenerFavoritos,
+} from './storage.js';
+import {
+  dom,
   alternarBotonCarga,
   mostrarCargando,
   mostrarErrorConReintento,
   limpiarEstado,
   renderizarMetricas,
   renderizarCatalogo,
+  abrirModalDetalle,
+  cerrarModalDetalle,
 } from './ui.js';
 
-// Elementos del DOM
-const form = document.querySelector('#search-form');
-const input = document.querySelector('#search-input');
-const btnBuscar = document.querySelector('#search-btn');
-const sortBtn = document.querySelector('#sort-btn');
-const filterRating = document.querySelector('#filter-rating');
-const statusBox = document.querySelector('#status-message');
-const statsBox = document.querySelector('#stats-info');
-const grid = document.querySelector('#anime-grid');
-
-// Estado de la aplicacion
+// Estado interno de la aplicacion
 let animesActuales = [];
 let controladorActivo = null;
 let peticionActualId = 0;
 let ordenDescendente = true;
+let soloFavoritos = false;
+let ultimoOrigen = '';
 
-// Gestiona el flujo de consulta a cache o red y actualiza la vista
+// Coordina la recuperacion de datos desde cache o red
 async function ejecutarConsulta(tipo, termino = '') {
-  // Identificador para sincronizar peticiones concurrentes
   const idConsulta = ++peticionActualId;
 
-  // Cancela la peticion anterior si sigue en curso
+  // Interrumpe la llamada anterior si continuaba pendiente
   if (controladorActivo) {
     controladorActivo.abort();
   }
   controladorActivo = new AbortController();
   const signal = controladorActivo.signal;
 
-  alternarBotonCarga(btnBuscar, true);
-  mostrarCargando(statusBox);
-  renderizarMetricas(statsBox, 0, null, {});
-
-  const claveCache = tipo === 'populares' ? 'populares' : `busqueda_${termino}`;
+  // Modifica el estado del boton segun el tipo de peticion
+  alternarBotonCarga(dom.btnBuscar, true, tipo);
+  mostrarCargando(dom.statusBox);
+  renderizarMetricas(dom.statsBox, 0, null, {});
 
   try {
-    let datosBrutos = obtenerDeCache(claveCache);
+    // La clave y el TTL se resuelven de forma opaca en storage.js
+    let datosBrutos = obtenerDeCache(tipo, termino);
+    let desdeCache = true;
 
     if (!datosBrutos) {
+      desdeCache = false;
       datosBrutos = tipo === 'populares'
         ? await obtenerPopulares(signal)
         : await buscarPorTexto(termino, signal);
 
-      // Descarta si llego una peticion mas reciente
+      // Descarta la respuesta si otra peticion comenzo mientras tanto
       if (idConsulta !== peticionActualId) return;
 
-      guardarEnCache(claveCache, datosBrutos);
+      guardarEnCache(tipo, termino, datosBrutos);
     }
 
     if (idConsulta !== peticionActualId) return;
 
-    // Normaliza la estructura de los animes
+    // Normaliza la respuesta en un unico paso mediante flatMap
     animesActuales = normalizarAnimes(datosBrutos);
+    ultimoOrigen = desdeCache ? 'Caché local' : 'API en directo';
 
-    limpiarEstado(statusBox);
+    limpiarEstado(dom.statusBox);
     actualizarVista();
 
   } catch (error) {
-    // Omite acciones si fue abortada o sustituida
     if (idConsulta !== peticionActualId || error.name === 'AbortError') return;
 
-    mostrarErrorConReintento(statusBox, error.message, () => {
+    mostrarErrorConReintento(dom.statusBox, error.message, () => {
       ejecutarConsulta(tipo, termino);
     });
-    renderizarCatalogo(grid, []);
+    renderizarCatalogo(dom.grid, []);
   } finally {
-    // Restablece el boton unicamente si es la peticion activa
+    // Restaura el boton de busqueda unicamente si corresponde a la peticion activa
     if (idConsulta === peticionActualId) {
-      alternarBotonCarga(btnBuscar, false);
+      alternarBotonCarga(dom.btnBuscar, false);
       controladorActivo = null;
     }
   }
 }
 
-// Aplica filtros, ordenacion y actualiza las metricas y tarjetas
+// Procesa filtros, ordenacion y actualiza los componentes en pantalla
 function actualizarVista() {
-  const notaMinima = Number(filterRating?.value) || 0;
+  const notaMinima = Number(dom.filterRating?.value) || 0;
 
   // Filtra por valor de rating minimo
-  const animesFiltrados = filtrarPorRatingMinimo(animesActuales, notaMinima);
+  let resultado = filtrarPorRatingMinimo(animesActuales, notaMinima);
 
-  // Ordena de forma inmutable segun el sentido actual
-  const animesOrdenados = ordenarPorRating(animesFiltrados, ordenDescendente);
+  // Aplica filtro de favoritos si esta activo
+  if (soloFavoritos) {
+    const idsFavs = obtenerFavoritos();
+    resultado = filtrarPorFavoritos(resultado, idsFavs);
+  }
 
-  // Calcula rating medio y recuento por estado
+  // Ordena de manera inmutable
+  const animesOrdenados = ordenarPorRating(resultado, ordenDescendente);
+
+  // Calcula metricas agregadas
   const media = calcularRatingMedio(animesOrdenados);
   const estados = contarPorEstado(animesOrdenados);
 
-  // Renderiza los componentes en pantalla
-  renderizarMetricas(statsBox, animesOrdenados.length, media, estados);
-  renderizarCatalogo(grid, animesOrdenados);
+  renderizarMetricas(dom.statsBox, animesOrdenados.length, media, estados, ultimoOrigen);
+
+  renderizarCatalogo(dom.grid, animesOrdenados, {
+    onVerDetalle: (anime) => abrirModalDetalle(dom.modal, dom.modalBody, anime),
+    onToggleFavorito: (id) => {
+      alternarFavorito(id);
+      actualizarVista();
+    },
+    esFavoritoFn: (id) => esFavorito(id),
+  });
 }
 
 // Alterna el orden de clasificacion
-sortBtn.addEventListener('click', () => {
+dom.sortBtn?.addEventListener('click', () => {
   ordenDescendente = !ordenDescendente;
-  sortBtn.textContent = ordenDescendente ? '↓ Mayor nota' : '↑ Menor nota';
+  dom.sortBtn.textContent = ordenDescendente ? '↓ Mayor nota' : '↑ Menor nota';
   actualizarVista();
 });
 
 // Listener para el filtro por nota minima
-filterRating?.addEventListener('change', actualizarVista);
+dom.filterRating?.addEventListener('change', actualizarVista);
 
-// Gestiona el envio del formulario de busqueda
-form.addEventListener('submit', (e) => {
+// Alterna el filtro de visualizacion de favoritos
+dom.favFilterBtn?.addEventListener('click', () => {
+  soloFavoritos = !soloFavoritos;
+  dom.favFilterBtn.textContent = soloFavoritos ? '★ Mostrando favoritos' : '☆ Ver favoritos';
+  dom.favFilterBtn.classList.toggle('active', soloFavoritos);
+  actualizarVista();
+});
+
+// Cierre del modal de detalle
+dom.modalClose?.addEventListener('click', () => cerrarModalDetalle(dom.modal));
+dom.modal?.addEventListener('click', (e) => {
+  if (e.target === dom.modal) cerrarModalDetalle(dom.modal);
+});
+
+// Envio del formulario de busqueda
+dom.form?.addEventListener('submit', (e) => {
   e.preventDefault();
-  const valor = input.value.trim();
+  const valor = dom.input.value.trim();
   ejecutarConsulta(valor ? 'busqueda' : 'populares', valor);
 });
 
-// Carga inicial al abrir la aplicacion
+// Carga inicial automatica
 ejecutarConsulta('populares');

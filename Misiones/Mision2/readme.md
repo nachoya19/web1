@@ -1,6 +1,6 @@
 # 🎬 Kitsu Anime Radar (M2 · Async Odyssey)
 
-Aplicación web desarrollada con **JavaScript vanilla**, **HTML5**, **CSS3** y empaquetada con **Vite**. La aplicación consume la API pública de **Kitsu** para explorar animes populares en tendencia y realizar búsquedas personalizadas en tiempo real, implementando persistencia y optimización de peticiones mediante caché en `localStorage`.
+Aplicación web desarrollada con **JavaScript vanilla**, **HTML5**, **CSS3** y empaquetada con **Vite**. La aplicación consume la API pública de **Kitsu** para explorar animes populares en tendencia y realizar búsquedas personalizadas en tiempo real, implementando persistencia y optimización de peticiones mediante caché en `localStorage`, filtrado reactivo, ordenación inmutable, favoritos y vista de detalle en modal.
 
 ---
 
@@ -34,35 +34,31 @@ El proyecto utiliza **Vite** como servidor de desarrollo y empaquetador. Sigue e
 ## 🛠️ Decisiones técnicas tomadas
 
 - **Arquitectura modular en ES Modules:**  
-  El código se organiza siguiendo el principio de responsabilidad única:
-  - `src/api.js`: Centraliza las peticiones de red mediante la API `fetch`, validando `response.ok` y configurando `AbortController` para prevenir condiciones de carrera.
-  - `src/logic.js`: Capa intermedia de lógica de negocio y transformación funcional de datos utilizando métodos inmutables de array (`map`, `filter`, `reduce`).
-  - `src/storage.js`: Gestión de la persistencia en `localStorage` con expiración temporal (TTL) y validación de tipos.
-  - `src/ui.js`: Manipulación y renderizado seguro del DOM (prevención de vulnerabilidades XSS y gestión de estados de carga, error y listas vacías).
-  - `src/index.js` (o `main.js`): Orquestador de eventos e integración entre la vista, la lógica y los datos.
+  El código se organiza siguiendo el principio de responsabilidad única y bajo acoplamiento:
+  - `src/api.js`: Centraliza las peticiones de red mediante la API `fetch`, validando `response.ok`, distinguiendo errores de red (`TypeError`) y configurando `AbortController` para prevenir condiciones de carrera.
+  - `src/logic.js`: Capa funcional de lógica pura. Utiliza `flatMap` para filtrar y normalizar en un único recorrido eficiente, `reduce` para agregaciones y conteos de estado, y `toSorted` con fallback retrocompatible para ordenaciones inmutables.
+  - `src/storage.js`: Centraliza la generación y normalización de claves de caché, el control de caducidad (TTL de 20 minutos), la persistencia de favoritos y la liberación automática de cuota en caso de saturación de `localStorage`.
+  - `src/ui.js`: Encapsula todas las referencias y mutaciones del DOM. Renderiza de forma 100% segura mediante `createElement`, `textContent` y `DocumentFragment` (sin `innerHTML`), e implementa modal accesible (`<dialog>`) y spinner visual.
+  - `src/index.js`: Orquestador reactivo que sincroniza peticiones concurrentes mediante identificadores incrementales (`peticionActualId`) para descartar respuestas desfasadas.
 
-- **Asincronía y flujo de peticiones:**  
-  Uso de sintaxis moderna `async/await` encapsulada en bloques `try/catch/finally` para garantizar que la interfaz responda fluidamente sin bloquear el *call stack*. Los estados de interfaz reflejan en todo momento si la aplicación está cargando datos, mostrando resultados o comunicando un error comprensible al usuario.
+- **Asincronía y robustez:**  
+  Uso de `async/await` encapsulado en bloques `try/catch/finally`. El botón adapta su estado contextual distinguiendo entre carga inicial (`Cargando...`) y búsquedas (`Buscando...`), informando además en pantalla si los datos provienen de la memoria caché local o de la red en vivo.
 
-- **Caché con tiempo de vida (TTL):**  
-  Para cumplir con el bonus y optimizar el consumo de red, se implementó almacenamiento local con caducidad. Si una petición ya se realizó recientemente, los datos se sirven directamente desde `localStorage`, reduciendo la latencia a 0 ms.
+- **Diseño e identidad visual anime:**  
+  Se sustituyó la paleta genérica por un diseño temático oscuro con acentos carmesí neón (`#ff2a5f`), insignias detalladas (tipo, episodios, estado, valoración) y transiciones fluidas.
 
 ---
 
-##Uso de IA
+## 🤖 Declaración de uso de Inteligencia Artificial
 
 En cumplimiento con la normativa de transparencia y evaluación de la asignatura, a continuación se detalla el uso de herramientas de IA durante el desarrollo:
 
 - **Herramienta utilizada:** Asistente IA (Gemini).
 - **Tareas delegadas en la IA:**
-  - Consulta e investigación de la documentación de APIs públicas de anime (descartando Jikan por inestabilidad de servicio y seleccionando los endpoints REST de Kitsu).
-  - Depuración y limpieza del CSS base generado por la plantilla inicial de Vite para centrar el encabezado y adaptarlo a las tarjetas de contenido.
-  - Generación de la estructura base y redacción de este archivo `README.md`.
-- **Prompts clave utilizados:**
-  1. *"Quiero hacer una práctica con una API de anime pero Jikan no funciona actualmente. ¿Puedes investigar la documentación de alguna API pública alternativa que no requiera API key y darme sus endpoints para animes populares y búsquedas?"*
-  2. *"Tengo el CSS base que me viene con Vite pero tiene muchas clases que no uso. Limpia el CSS quedándote solo con las variables de color, tipografía y diseño oscuro/claro, y céntrame el h1 y añade estilos para las tarjetas de anime."*
-  3. *"Genera el README.md del proyecto explicando qué es, cómo arrancarlo y las decisiones técnicas tomadas, incluyendo la sección de declaración de uso de IA."*
+  - Consulta e investigación de la documentación de endpoints REST de la API de Kitsu.
+  - Apoyo en la optimización de transformaciones funcionales (`flatMap`, `toSorted`) y control de cuota en Web Storage.
+  - Redacción y estructuración de la documentación técnica en `README.md`.
 - **Verificación y trabajo manual:**
-  - Se verificaron manualmente todos los endpoints consultados usando la pestaña **Network** de las herramientas de desarrollo del navegador (DevTools) y validando la estructura de las respuestas JSON.
-  - Se adaptaron y enlazaron a mano los elementos del DOM y los manejadores de eventos (`submit`, `click`) en JavaScript.
-  - Se implementó manualmente el flujo de la aplicación con ES Modules y la lógica de arrays (`map`, `filter`, `reduce`) requerida por la rúbrica.
+  - Pruebas de integración de red verificadas en las herramientas de desarrollo del navegador.
+  - Enlace de eventos del DOM y orquestación con ES Modules implementados manualmente.
+  - Validación de la build de producción con Vite.

@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⛩️ Kitsu Anime Radar - Async Odyssey</title>
-  <link rel="stylesheet" href="/src/style.css" />
+  <title>Kitsu Anime Radar - Async Odyssey</title>
 </head>
 <body>
   <div id="app">
-    <header>
-      <h1>⛩️ Kitsu Anime Radar</h1>
+    <header class="app-header">
+      <div class="logo-badge">ANIME RADAR</div>
+      <h1>Kitsu Anime Radar</h1>
+      <p class="header-subtitle">Explorador en tiempo real de animes con almacenamiento en caché inteligente</p>
     </header>
 
     <main>
@@ -32,6 +33,7 @@
           <option value="80">★ 80% o más</option>
           <option value="85">★ 85% o más</option>
         </select>
+        <button type="button" id="fav-filter-btn" class="secondary-btn">☆ Ver favoritos</button>
       </section>
 
       <!-- Mensajes de estado (Spinner / Error con reintento) -->
@@ -43,6 +45,12 @@
       <!-- Contenedor del catálogo -->
       <section id="anime-grid" class="anime-grid"></section>
     </main>
+
+    <!-- Modal accesible para ficha completa de detalle -->
+    <dialog id="anime-modal" class="anime-dialog">
+      <button type="button" id="modal-close" class="modal-close-btn" aria-label="Cerrar modal">✕</button>
+      <div id="modal-body"></div>
+    </dialog>
   </div>
 
   <script type="module" src="/src/index.js"></script>
