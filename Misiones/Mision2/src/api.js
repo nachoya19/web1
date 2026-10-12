@@ -1,79 +1,54 @@
+// Endpoint base de la API de Kitsu
 const BASE_URL = 'https://kitsu.app/api/edge';
 
-// Variable para almacenar el AbortController de la petición activa
-let controladorActual = null;
-
-/**
- * Traduce códigos HTTP a mensajes amigables para el usuario
- */
+// Traduce codigos de estado HTTP a mensajes para el usuario
 function formatearErrorHttp(status) {
-  if (status === 404) return 'No se han encontrado animes con ese nombre.';
-  if (status === 429) return 'Límite de consultas superado. Espera unos segundos antes de reintentar.';
-  if (status >= 500) return 'El servidor de anime está experimentando problemas. Prueba en unos minutos.';
-  return `Error en la solicitud (Código ${status}).`;
+  if (status === 404) return 'No se han encontrado animes con esos criterios.';
+  if (status === 429) return 'Límite de consultas a Kitsu alcanzado. Espera unos segundos.';
+  if (status >= 500) return 'El servidor de Kitsu no responde correctamente. Prueba más tarde.';
+  return `Error en la solicitud HTTP (${status}).`;
 }
 
-/**
- * Función central de petición que gestiona cancelación y validaciones
- */
-async function realizarPeticion(url) {
-  // 1. Si ya hay una petición en curso, la abortamos para evitar condiciones de carrera
-  if (controladorActual) {
-    controladorActual.abort();
-  }
-
-  // 2. Creamos una nueva instancia de AbortController para esta petición
-  controladorActual = new AbortController();
-
+// Realiza la llamada fetch gestionando la cancelacion y validacion
+async function realizarPeticion(url, signal) {
   try {
-    const respuesta = await fetch(url, {
-      signal: controladorActual.signal,
-      headers: {
-        'Accept': 'application/vnd.api+json',
-      },
-    });
+    const respuesta = await fetch(url, { signal });
 
-    // 3. fetch no rechaza por códigos 4xx/5xx; verificamos respuesta.ok manualmente
+    // Verifica que la respuesta sea correcta
     if (!respuesta.ok) {
       throw new Error(formatearErrorHttp(respuesta.status));
     }
 
-    const resultado = await respuesta.json();
+    const json = await respuesta.json();
 
-    // 4. Validamos que la API realmente haya devuelto el array esperado
-    if (!resultado || !Array.isArray(resultado.data)) {
+    // Comprueba que los datos devueltos sean un array
+    if (!json || !Array.isArray(json.data)) {
       throw new Error('La respuesta recibida no tiene el formato de datos esperado.');
     }
 
-    return resultado.data;
-
+    return json.data;
   } catch (error) {
-    // Si la petición fue abortada expresamente por una nueva búsqueda, relanzamos el AbortError
+    // Relanza el error si la peticion fue cancelada
     if (error.name === 'AbortError') {
       throw error;
     }
-
-    // Si hubo un fallo de conexión (ej. sin internet o bloqueo de red)
+    // Captura fallos de conectividad
     if (error instanceof TypeError) {
-      throw new Error('Error de conexión a internet. Comprueba tu red e inténtalo de nuevo.');
+      throw new Error('Sin conexión con la API de anime. Comprueba tu conexión a internet.');
     }
-
-    // Relanzamos cualquier error con mensaje ya formateado
     throw error;
   }
 }
 
-/**
- * Obtiene la lista de animes populares en tendencia
- */
-export async function obtenerPopulares() {
-  return await realizarPeticion(`${BASE_URL}/trending/anime`);
+// Obtiene la lista de animes populares
+export async function obtenerPopulares(signal) {
+  const url = `${BASE_URL}/trending/anime`;
+  return await realizarPeticion(url, signal);
 }
 
-/**
- * Busca animes en Kitsu según el texto proporcionado
- */
-export async function buscarPorTexto(termino) {
-  const url = `${BASE_URL}/anime?filter[text]=${encodeURIComponent(termino)}`;
-  return await realizarPeticion(url);
+// Busca animes por termino de texto
+export async function buscarPorTexto(termino, signal) {
+  const terminoLimpio = encodeURIComponent(termino.trim());
+  const url = `${BASE_URL}/anime?filter[text]=${terminoLimpio}&page[limit]=12`;
+  return await realizarPeticion(url, signal);
 }

@@ -49,11 +49,11 @@ El proyecto utiliza **Vite** como servidor de desarrollo y empaquetador. Sigue e
 
 ---
 
-## 🤖 Declaración de uso de Inteligencia Artificial
+##Uso de IA
 
 En cumplimiento con la normativa de transparencia y evaluación de la asignatura, a continuación se detalla el uso de herramientas de IA durante el desarrollo:
 
-- **Herramienta utilizada:** Asistente IA (Gemini / Claude / ChatGPT).
+- **Herramienta utilizada:** Asistente IA (Gemini).
 - **Tareas delegadas en la IA:**
   - Consulta e investigación de la documentación de APIs públicas de anime (descartando Jikan por inestabilidad de servicio y seleccionando los endpoints REST de Kitsu).
   - Depuración y limpieza del CSS base generado por la plantilla inicial de Vite para centrar el encabezado y adaptarlo a las tarjetas de contenido.

@@ -1,19 +1,19 @@
-// Clave prefijo para no colisionar con otras apps en el mismo dominio
+// Prefijo de almacenamiento y tiempo de validez en milisegundos (20 min)
 const PREFIX = 'kitsu_cache_';
-
-// Tiempo de vida de la caché: 20 minutos en milisegundos (20 * 60 * 1000)
 const TTL_MS = 20 * 60 * 1000;
 
-/**
- * Guarda datos en localStorage con una marca de tiempo (timestamp)
- * Solo guarda si los datos son un array válido.
- */
+// Limpia espacios y convierte a minusculas para formar la clave
+export function normalizarClave(texto) {
+  if (typeof texto !== 'string') return '';
+  return texto
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_');
+}
+
+// Almacena un array con marca temporal en localStorage
 export function guardarEnCache(clave, datos) {
-  // Validación requerida por la rúbrica: no guardar si no es array
-  if (!Array.isArray(datos)) {
-    console.warn(`[Storage] Los datos para "${clave}" no son un array. Se descarta el guardado.`);
-    return;
-  }
+  if (!Array.isArray(datos)) return;
 
   const envoltorio = {
     timestamp: Date.now(),
@@ -21,39 +21,38 @@ export function guardarEnCache(clave, datos) {
   };
 
   try {
-    const jsonString = JSON.stringify(envoltorio);
-    localStorage.setItem(PREFIX + clave, jsonString);
+    localStorage.setItem(PREFIX + normalizarClave(clave), JSON.stringify(envoltorio));
   } catch (error) {
-    // Manejo de error típico: cuota excedida en localStorage
-    console.error(`[Storage] Error al guardar en localStorage:`, error.message);
+    console.error('[Storage] Error al persistir en localStorage:', error.message);
   }
 }
 
-/**
- * Recupera datos de localStorage comprobando si han expirado (TTL)
- * Devuelve el array de datos o null si expiró / no existe.
- */
+// Recupera datos en cache comprobando si han expirado
 export function obtenerDeCache(clave) {
+  const claveFinal = PREFIX + normalizarClave(clave);
   try {
-    const contenido = localStorage.getItem(PREFIX + clave);
+    const contenido = localStorage.getItem(claveFinal);
     if (!contenido) return null;
 
-    const { timestamp, data } = JSON.parse(contenido);
+    const parseado = JSON.parse(contenido);
 
-    // Comprobamos si el tiempo actual supera el TTL fijado
+    // Comprueba que la marca temporal sea numerica
+    const { timestamp, data } = parseado;
+    if (typeof timestamp !== 'number' || !Number.isFinite(timestamp)) {
+      localStorage.removeItem(claveFinal);
+      return null;
+    }
+
+    // Descarta el registro si supero el tiempo limite
     const haCaducado = Date.now() - timestamp > TTL_MS;
-
     if (haCaducado) {
-      console.log(`[Storage] La caché para "${clave}" ha caducado. Se renueva.`);
-      localStorage.removeItem(PREFIX + clave);
+      localStorage.removeItem(claveFinal);
       return null;
     }
 
     return Array.isArray(data) ? data : null;
   } catch (error) {
-    // Si el JSON estaba corrupto, limpiamos la entrada por seguridad
-    console.error(`[Storage] Error al leer la caché para "${clave}":`, error.message);
-    localStorage.removeItem(PREFIX + clave);
+    localStorage.removeItem(claveFinal);
     return null;
   }
 }

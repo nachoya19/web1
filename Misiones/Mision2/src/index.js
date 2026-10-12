@@ -1,96 +1,130 @@
+import './style.css';
 import { obtenerPopulares, buscarPorTexto } from './api.js';
-import { normalizarAnimes, calcularRatingMedio } from './logic.js';
+import {
+  normalizarAnimes,
+  calcularRatingMedio,
+  contarPorEstado,
+  ordenarPorRating,
+  filtrarPorRatingMinimo,
+} from './logic.js';
 import { guardarEnCache, obtenerDeCache } from './storage.js';
 import {
   alternarBotonCarga,
-  mostrarEstado,
-  mostrarError,
+  mostrarCargando,
+  mostrarErrorConReintento,
+  limpiarEstado,
   renderizarMetricas,
   renderizarCatalogo,
 } from './ui.js';
 
-// 1. Selección de nodos del DOM (centralizada en el orquestador)
-const formBusqueda = document.querySelector('#search-form');
-const inputBusqueda = document.querySelector('#search-input');
-const btnBusqueda = document.querySelector('#search-btn');
-const contenedorEstado = document.querySelector('#status-message');
-const contenedorStats = document.querySelector('#stats-info');
-const contenedorGrid = document.querySelector('#anime-grid');
+// Elementos del DOM
+const form = document.querySelector('#search-form');
+const input = document.querySelector('#search-input');
+const btnBuscar = document.querySelector('#search-btn');
+const sortBtn = document.querySelector('#sort-btn');
+const filterRating = document.querySelector('#filter-rating');
+const statusBox = document.querySelector('#status-message');
+const statsBox = document.querySelector('#stats-info');
+const grid = document.querySelector('#anime-grid');
 
-/**
- * Función central de flujo:
- * Caché (storage) -> API (red) -> Lógica (map/filter/reduce) -> UI (DOM seguro)
- */
-async function procesarConsulta(tipo, termino = '') {
-  const claveCache = tipo === 'populares' ? 'populares' : `busqueda_${termino.toLowerCase()}`;
+// Estado de la aplicacion
+let animesActuales = [];
+let controladorActivo = null;
+let peticionActualId = 0;
+let ordenDescendente = true;
 
-  // 1. Estados de carga y bloqueo de botón
-  alternarBotonCarga(btnBusqueda, true);
-  mostrarEstado(contenedorEstado, tipo === 'populares' ? 'Cargando animes populares...' : `Buscando "${termino}"...`);
-  renderizarMetricas(contenedorStats, 0, 0);
+// Gestiona el flujo de consulta a cache o red y actualiza la vista
+async function ejecutarConsulta(tipo, termino = '') {
+  // Identificador para sincronizar peticiones concurrentes
+  const idConsulta = ++peticionActualId;
+
+  // Cancela la peticion anterior si sigue en curso
+  if (controladorActivo) {
+    controladorActivo.abort();
+  }
+  controladorActivo = new AbortController();
+  const signal = controladorActivo.signal;
+
+  alternarBotonCarga(btnBuscar, true);
+  mostrarCargando(statusBox);
+  renderizarMetricas(statsBox, 0, null, {});
+
+  const claveCache = tipo === 'populares' ? 'populares' : `busqueda_${termino}`;
 
   try {
     let datosBrutos = obtenerDeCache(claveCache);
 
-    // 2. Si no están en caché con TTL válido, pedimos a la red
     if (!datosBrutos) {
-      console.log(`[App] Solicitando datos a la API de Kitsu (${tipo})...`);
-      datosBrutos = tipo === 'populares' 
-        ? await obtenerPopulares() 
-        : await buscarPorTexto(termino);
+      datosBrutos = tipo === 'populares'
+        ? await obtenerPopulares(signal)
+        : await buscarPorTexto(termino, signal);
 
-      // Guardamos la respuesta bruta en caché
+      // Descarta si llego una peticion mas reciente
+      if (idConsulta !== peticionActualId) return;
+
       guardarEnCache(claveCache, datosBrutos);
-    } else {
-      console.log(`[App] Datos recuperados desde la caché local (${claveCache}).`);
     }
 
-    // 3. Capa de lógica: filter + map
-    const animesProcesados = normalizarAnimes(datosBrutos);
+    if (idConsulta !== peticionActualId) return;
 
-    // 4. Comprobación de lista vacía
-    if (animesProcesados.length === 0) {
-      mostrarEstado(contenedorEstado, 'No se encontraron resultados para esta búsqueda.');
-      renderizarCatalogo(contenedorGrid, []);
-      return;
-    }
+    // Normaliza la estructura de los animes
+    animesActuales = normalizarAnimes(datosBrutos);
 
-    // 5. Capa de lógica: cálculo con reduce
-    const ratingPromedio = calcularRatingMedio(animesProcesados);
-
-    // 6. Renderizado seguro en la interfaz
-    mostrarEstado(contenedorEstado, '');
-    renderizarMetricas(contenedorStats, animesProcesados.length, ratingPromedio);
-    renderizarCatalogo(contenedorGrid, animesProcesados);
+    limpiarEstado(statusBox);
+    actualizarVista();
 
   } catch (error) {
-    // Si la petición fue abortada por una búsqueda más reciente, se ignora silenciosamente
-    if (error.name === 'AbortError') {
-      console.log('[App] Petición anterior cancelada por una nueva búsqueda.');
-      return;
-    }
+    // Omite acciones si fue abortada o sustituida
+    if (idConsulta !== peticionActualId || error.name === 'AbortError') return;
 
-    console.error('[App] Error en la ejecución:', error.message);
-    mostrarError(contenedorEstado, error.message);
-    renderizarCatalogo(contenedorGrid, []);
+    mostrarErrorConReintento(statusBox, error.message, () => {
+      ejecutarConsulta(tipo, termino);
+    });
+    renderizarCatalogo(grid, []);
   } finally {
-    // Siempre reactivamos el botón al terminar
-    alternarBotonCarga(btnBusqueda, false);
+    // Restablece el boton unicamente si es la peticion activa
+    if (idConsulta === peticionActualId) {
+      alternarBotonCarga(btnBuscar, false);
+      controladorActivo = null;
+    }
   }
 }
 
-// Evento de formulario de búsqueda
-formBusqueda.addEventListener('submit', (evento) => {
-  evento.preventDefault();
-  const valor = inputBusqueda.value.trim();
+// Aplica filtros, ordenacion y actualiza las metricas y tarjetas
+function actualizarVista() {
+  const notaMinima = Number(filterRating?.value) || 0;
 
-  if (valor === '') {
-    procesarConsulta('populares');
-    return;
-  }
+  // Filtra por valor de rating minimo
+  const animesFiltrados = filtrarPorRatingMinimo(animesActuales, notaMinima);
 
-  procesarConsulta('busqueda', valor);
+  // Ordena de forma inmutable segun el sentido actual
+  const animesOrdenados = ordenarPorRating(animesFiltrados, ordenDescendente);
+
+  // Calcula rating medio y recuento por estado
+  const media = calcularRatingMedio(animesOrdenados);
+  const estados = contarPorEstado(animesOrdenados);
+
+  // Renderiza los componentes en pantalla
+  renderizarMetricas(statsBox, animesOrdenados.length, media, estados);
+  renderizarCatalogo(grid, animesOrdenados);
+}
+
+// Alterna el orden de clasificacion
+sortBtn.addEventListener('click', () => {
+  ordenDescendente = !ordenDescendente;
+  sortBtn.textContent = ordenDescendente ? '↓ Mayor nota' : '↑ Menor nota';
+  actualizarVista();
 });
 
-// Carga inicial automática al iniciar la aplicación
-procesarConsulta('populares');
+// Listener para el filtro por nota minima
+filterRating?.addEventListener('change', actualizarVista);
+
+// Gestiona el envio del formulario de busqueda
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const valor = input.value.trim();
+  ejecutarConsulta(valor ? 'busqueda' : 'populares', valor);
+});
+
+// Carga inicial al abrir la aplicacion
+ejecutarConsulta('populares');

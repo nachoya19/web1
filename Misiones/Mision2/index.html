@@ -3,40 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kitsu Anime Radar - Async Odyssey</title>
+  <title>⛩️ Kitsu Anime Radar - Async Odyssey</title>
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
   <div id="app">
     <header>
-      <h1>API ANIME</h1>
+      <h1>⛩️ Kitsu Anime Radar</h1>
     </header>
 
     <main>
-      <!-- Barra de búsqueda -->
-      <form id="search-form" class="search-form">
-        <input 
-          type="text" 
-          id="search-input" 
-          class="search-input" 
-          placeholder="Buscar anime (ej. Naruto, One Piece)..." 
-          autocomplete="off"
-        />
-        <button type="submit" id="search-btn" class="search-btn">Buscar</button>
-      </form>
+      <!-- Barra y Controles de Búsqueda -->
+      <section class="controls-section">
+        <form id="search-form" class="search-form">
+          <input 
+            type="text" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Buscar anime (ej. Naruto, Attack on Titan)..." 
+            autocomplete="off"
+          />
+          <button type="submit" id="search-btn" class="search-btn">Buscar</button>
+        </form>
+        <button type="button" id="sort-btn" class="secondary-btn">↓ Mayor nota</button>
+        <select id="filter-rating" class="secondary-btn" aria-label="Filtrar por valoración mínima">
+          <option value="0">Todas las notas</option>
+          <option value="70">★ 70% o más</option>
+          <option value="80">★ 80% o más</option>
+          <option value="85">★ 85% o más</option>
+        </select>
+      </section>
 
-      <!-- Contenedor para estados (cargando, error, sin resultados) -->
-      <div id="status-message" class="status-msg"></div>
+      <!-- Mensajes de estado (Spinner / Error con reintento) -->
+      <div id="status-message"></div>
 
-      <!-- Métricas y resumen del catálogo (calculadas con reduce) -->
-      <div id="stats-info" class="status-msg" style="font-weight: 500; font-size: 15px;"></div>
+      <!-- Métricas calculadas con reduce -->
+      <div id="stats-info" class="stats-bar"></div>
 
-      <!-- Contenedor del grid de tarjetas -->
+      <!-- Contenedor del catálogo -->
       <section id="anime-grid" class="anime-grid"></section>
     </main>
   </div>
 
-  <!-- Enlace al módulo ES orquestador -->
   <script type="module" src="/src/index.js"></script>
 </body>
 </html>
