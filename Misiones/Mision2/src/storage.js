@@ -1,15 +1,34 @@
-// Prefijo para evitar colisiones y tiempo maximo de validez (20 minutos)
+// Constantes de configuracion de almacenamiento
 const PREFIX = 'kitsu_cache_';
 const FAVORITOS_KEY = 'kitsu_favoritos';
 const TTL_MS = 20 * 60 * 1000;
 
-// Limpia espacios y caracteres para estandarizar la cadena
+// Borrado seguro que no propaga errores si el storage esta bloqueado
+function seguroRemoverItem(clave) {
+  try {
+    localStorage.removeItem(clave);
+  } catch {
+    // Omite excepciones si el almacenamiento local esta restringido
+  }
+}
+
+// Escritura protegida frente a bloqueos de navegador
+function seguroSetItem(clave, valor) {
+  try {
+    localStorage.setItem(clave, valor);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Estandariza la cadena eliminando caracteres sobrantes
 export function normalizarTexto(texto) {
   if (typeof texto !== 'string') return '';
   return texto.trim().toLowerCase().replace(/\s+/g, '_');
 }
 
-// Genera la clave unica de cache centralizada en el modulo de almacenamiento
+// Genera la clave unica centralizada para la cache
 export function generarClaveCache(tipo, termino = '') {
   const terminoLimpio = normalizarTexto(termino);
   if (tipo === 'populares' || !terminoLimpio) {
@@ -18,7 +37,7 @@ export function generarClaveCache(tipo, termino = '') {
   return `busqueda_${terminoLimpio}`;
 }
 
-// Elimina registros caducados para liberar espacio en almacenamiento
+// Pone a disposicion espacio eliminando registros obsoletos
 function liberarEspacioExcedido() {
   const ahora = Date.now();
   const clavesParaBorrar = [];
@@ -28,7 +47,7 @@ function liberarEspacioExcedido() {
     if (clave && clave.startsWith(PREFIX)) {
       try {
         const item = JSON.parse(localStorage.getItem(clave));
-        if (!item || !item.timestamp || ahora - item.timestamp > TTL_MS) {
+        if (!item || typeof item !== 'object' || !item.timestamp || ahora - item.timestamp > TTL_MS) {
           clavesParaBorrar.push(clave);
         }
       } catch {
@@ -37,12 +56,11 @@ function liberarEspacioExcedido() {
     }
   }
 
-  clavesParaBorrar.forEach((clave) => localStorage.removeItem(clave));
+  clavesParaBorrar.forEach(seguroRemoverItem);
 }
 
-// Guarda datos en localStorage gestionando cuota y marcas de tiempo
+// Almacena datos asociando una marca de tiempo
 export function guardarEnCache(tipo, termino, datos) {
-  // Permite llamada con dos parametros si se pasa clave directa
   const datosAGuardar = datos !== undefined ? datos : termino;
   const claveInterna = datos !== undefined 
     ? generarClaveCache(tipo, termino) 
@@ -58,21 +76,15 @@ export function guardarEnCache(tipo, termino, datos) {
   const claveFinal = PREFIX + claveInterna;
   const contenido = JSON.stringify(envoltorio);
 
-  try {
-    localStorage.setItem(claveFinal, contenido);
-  } catch (error) {
-    // Si la cuota se satura, limpia entradas antiguas y reintenta
-    console.warn('[Storage] Cuota excedida, liberando cache antigua...');
+  const exito = seguroSetItem(claveFinal, contenido);
+  if (!exito) {
+    // Si la cuota falla, purga entradas caducadas y reintenta
     liberarEspacioExcedido();
-    try {
-      localStorage.setItem(claveFinal, contenido);
-    } catch (segundoError) {
-      console.error('[Storage] No se pudo guardar tras purgar cache:', segundoError.message);
-    }
+    seguroSetItem(claveFinal, contenido);
   }
 }
 
-// Recupera datos verificando que no hayan superado el TTL
+// Recupera el registro distinguiendo ausencia de datos frente a resultado vacio
 export function obtenerDeCache(tipo, termino = '') {
   const claveInterna = termino !== undefined 
     ? generarClaveCache(tipo, termino) 
@@ -82,35 +94,45 @@ export function obtenerDeCache(tipo, termino = '') {
 
   try {
     const contenido = localStorage.getItem(claveFinal);
+    // Ausencia de registro en almacenamiento
     if (!contenido) return null;
 
     const parseado = JSON.parse(contenido);
 
-    // Valida que el timestamp exista y sea un numero finito
-    const { timestamp, data } = parseado;
-    if (typeof timestamp !== 'number' || !Number.isFinite(timestamp)) {
-      localStorage.removeItem(claveFinal);
+    // Valida que el objeto sea valido antes de desestructurar
+    if (!parseado || typeof parseado !== 'object' || !Array.isArray(parseado.data)) {
+      seguroRemoverItem(claveFinal);
       return null;
     }
 
-    // Comprueba si el registro ha caducado
+    const { timestamp, data } = parseado;
+
+    // Comprueba formato numerico del timestamp
+    if (typeof timestamp !== 'number' || !Number.isFinite(timestamp)) {
+      seguroRemoverItem(claveFinal);
+      return null;
+    }
+
+    // Comprueba caducidad respecto al tiempo de vida
     const haCaducado = Date.now() - timestamp > TTL_MS;
     if (haCaducado) {
-      localStorage.removeItem(claveFinal);
+      seguroRemoverItem(claveFinal);
       return null;
     }
 
-    return Array.isArray(data) ? data : null;
-  } catch (error) {
-    localStorage.removeItem(claveFinal);
+    // Devuelve el objeto que encapsula la lista y metadatos
+    return { data, timestamp };
+  } catch {
+    seguroRemoverItem(claveFinal);
     return null;
   }
 }
 
-// Obtiene la lista de identificadores guardados como favoritos
+// Recupera la lista de favoritos almacenados
 export function obtenerFavoritos() {
   try {
     const raw = localStorage.getItem(FAVORITOS_KEY);
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -118,7 +140,7 @@ export function obtenerFavoritos() {
   }
 }
 
-// Alterna el estado de favorito de un anime
+// Modifica la presencia de un elemento en la lista de favoritos
 export function alternarFavorito(animeId) {
   const favoritos = obtenerFavoritos();
   const idStr = String(animeId);
@@ -128,16 +150,11 @@ export function alternarFavorito(animeId) {
     ? favoritos.filter((id) => id !== idStr) 
     : [...favoritos, idStr];
 
-  try {
-    localStorage.setItem(FAVORITOS_KEY, JSON.stringify(nuevaLista));
-  } catch (error) {
-    console.error('[Storage] Error al actualizar favoritos:', error.message);
-  }
-
+  seguroSetItem(FAVORITOS_KEY, JSON.stringify(nuevaLista));
   return !existe;
 }
 
-// Comprueba si un anime forma parte de los favoritos
+// Verifica si un elemento concreto esta guardado como favorito
 export function esFavorito(animeId) {
   return obtenerFavoritos().includes(String(animeId));
 }

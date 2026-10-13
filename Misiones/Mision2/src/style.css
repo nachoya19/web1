@@ -236,6 +236,12 @@ h1 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 24px;
+  transition: opacity 0.25s ease;
+}
+
+.anime-grid.grid-dimmed {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .anime-card {

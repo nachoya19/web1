@@ -1,4 +1,4 @@
-// Descarta animes sin titulos validos
+// Descarta elementos que carecen de titulos validos
 export function filtrarAnimesValidos(listaBruta) {
   if (!Array.isArray(listaBruta)) return [];
 
@@ -8,7 +8,7 @@ export function filtrarAnimesValidos(listaBruta) {
   });
 }
 
-// Filtra y transforma la lista en una sola pasada usando flatMap
+// Filtra y transforma en un unico paso mediante flatMap
 export function normalizarAnimes(listaBruta) {
   if (!Array.isArray(listaBruta)) return [];
 
@@ -18,10 +18,10 @@ export function normalizarAnimes(listaBruta) {
       attrs && (attrs.canonicalTitle || attrs.titles?.en || attrs.titles?.en_jp || attrs.titles?.ja_jp)
     );
 
-    // Omite elementos sin estructura minima
+    // Omite items sin campos de titulo
     if (!esValido) return [];
 
-    // Prioriza titulos segun orden de disponibilidad
+    // Fallbacks secuenciales de titulos
     const tituloFinal = attrs.canonicalTitle 
       ?? attrs.titles?.en 
       ?? attrs.titles?.en_jp 
@@ -47,18 +47,26 @@ export function normalizarAnimes(listaBruta) {
   });
 }
 
-// Obtiene la calificacion promedio preservando un decimal
+// Calcula la media con un unico reduce preservando un decimal
 export function calcularRatingMedio(lista) {
   if (!Array.isArray(lista) || lista.length === 0) return null;
 
-  const conRating = lista.filter((a) => typeof a.rating === 'number' && !Number.isNaN(a.rating));
-  if (conRating.length === 0) return null;
+  const resultado = lista.reduce(
+    (acumulado, anime) => {
+      if (typeof anime.rating === 'number' && !Number.isNaN(anime.rating)) {
+        acumulado.suma += anime.rating;
+        acumulado.contador += 1;
+      }
+      return acumulado;
+    },
+    { suma: 0, contador: 0 }
+  );
 
-  const total = conRating.reduce((acumulado, anime) => acumulado + anime.rating, 0);
-  return Number((total / conRating.length).toFixed(1));
+  if (resultado.contador === 0) return null;
+  return Number((resultado.suma / resultado.contador).toFixed(1));
 }
 
-// Agrupa y contabiliza animes segun su estado de emision
+// Contabiliza el volumen de animes clasificados por estado
 export function contarPorEstado(lista) {
   if (!Array.isArray(lista)) return {};
 
@@ -69,13 +77,20 @@ export function contarPorEstado(lista) {
   }, {});
 }
 
-// Ordena de forma inmutable con soporte retrocompatible
+// Ordena situando siempre los elementos sin nota al final
 export function ordenarPorRating(lista, descendente = true) {
   if (!Array.isArray(lista)) return [];
 
   const comparador = (a, b) => {
-    const ratingA = a.rating ?? 0;
-    const ratingB = b.rating ?? 0;
+    const ratingA = a.rating;
+    const ratingB = b.rating;
+
+    // Si ambos carecen de nota, preservan su orden relativo
+    if (ratingA === null && ratingB === null) return 0;
+    // Animes sin calificacion se situan siempre al final de la lista
+    if (ratingA === null) return 1;
+    if (ratingB === null) return -1;
+
     return descendente ? ratingB - ratingA : ratingA - ratingB;
   };
 
@@ -84,13 +99,22 @@ export function ordenarPorRating(lista, descendente = true) {
     : [...lista].sort(comparador);
 }
 
-// Filtra la lista por umbral de puntuacion minima
+// Filtra por rating excluyendo expresamente elementos sin nota
 export function filtrarPorRatingMinimo(lista, notaMinima = 0) {
   if (!Array.isArray(lista)) return [];
-  return lista.filter((anime) => (anime.rating ?? 0) >= notaMinima);
+  if (notaMinima <= 0) return lista;
+
+  return lista.filter((anime) => typeof anime.rating === 'number' && !Number.isNaN(anime.rating) && anime.rating >= notaMinima);
 }
 
-// Filtra elementos segun la lista de identificadores favoritos
+// Filtra la coleccion segun el estado de emision
+export function filtrarPorEstado(lista, estadoFiltro = 'todos') {
+  if (!Array.isArray(lista)) return [];
+  if (!estadoFiltro || estadoFiltro === 'todos') return lista;
+  return lista.filter((anime) => anime.estado.toLowerCase() === estadoFiltro.toLowerCase());
+}
+
+// Filtra segun el identificador de favoritos
 export function filtrarPorFavoritos(lista, idsFavoritos = []) {
   if (!Array.isArray(lista)) return [];
   const setFavoritos = new Set(idsFavoritos.map(String));

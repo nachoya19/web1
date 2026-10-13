@@ -1,13 +1,14 @@
 // Imagen de reserva en formato SVG embebido
 export const PLACEHOLDER_IMG = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300" viewBox="0 0 200 300"><rect width="200" height="300" fill="%231a1e2e"/><text x="50%" y="50%" fill="%238a92b2" font-family="sans-serif" font-size="16" text-anchor="middle" dy=".3em">Sin Imagen</text></svg>';
 
-// Nodos del DOM centralizados en el modulo de interfaz
+// Elementos del DOM centralizados para su consumo
 export const dom = {
   form: document.querySelector('#search-form'),
   input: document.querySelector('#search-input'),
   btnBuscar: document.querySelector('#search-btn'),
   sortBtn: document.querySelector('#sort-btn'),
   filterRating: document.querySelector('#filter-rating'),
+  filterStatus: document.querySelector('#filter-status'),
   favFilterBtn: document.querySelector('#fav-filter-btn'),
   statusBox: document.querySelector('#status-message'),
   statsBox: document.querySelector('#stats-info'),
@@ -17,7 +18,7 @@ export const dom = {
   modalClose: document.querySelector('#modal-close'),
 };
 
-// Ajusta el texto del boton distinguiendo entre carga inicial y busqueda
+// Modifica el estado del boton adaptando el mensaje segun la operacion
 export function alternarBotonCarga(boton, cargando, tipo = 'busqueda') {
   if (!boton) return;
   boton.disabled = cargando;
@@ -28,7 +29,13 @@ export function alternarBotonCarga(boton, cargando, tipo = 'busqueda') {
   }
 }
 
-// Renderiza un spinner animado sin utilizar innerHTML
+// Aplica o retira una atenuacion visual sobre el catalogo previo
+export function atenuarRejilla(contenedorGrid, atenuar) {
+  if (!contenedorGrid) return;
+  contenedorGrid.classList.toggle('grid-dimmed', Boolean(atenuar));
+}
+
+// Renderiza un spinner animado seguro con Document API
 export function mostrarCargando(contenedor) {
   if (!contenedor) return;
   contenedor.replaceChildren();
@@ -46,7 +53,7 @@ export function mostrarCargando(contenedor) {
   contenedor.appendChild(wrapper);
 }
 
-// Muestra aviso de error con accion para reintentar la solicitud
+// Renderiza aviso de error y permite reintentar la accion
 export function mostrarErrorConReintento(contenedor, mensajeError, callbackReintento) {
   if (!contenedor) return;
   contenedor.replaceChildren();
@@ -61,18 +68,22 @@ export function mostrarErrorConReintento(contenedor, mensajeError, callbackReint
   btnReintentar.className = 'retry-btn';
   btnReintentar.textContent = 'Reintentar petición';
   btnReintentar.type = 'button';
-  btnReintentar.addEventListener('click', callbackReintento, { once: true });
+  btnReintentar.addEventListener('click', () => {
+    btnReintentar.disabled = true;
+    btnReintentar.textContent = 'Reintentando...';
+    callbackReintento();
+  });
 
   wrapper.append(texto, btnReintentar);
   contenedor.appendChild(wrapper);
 }
 
-// Limpia el contenido de cualquier contenedor
+// Vacia el contenido de un nodo
 export function limpiarEstado(contenedor) {
   if (contenedor) contenedor.replaceChildren();
 }
 
-// Renderiza el balance numerico y el desglose de animes
+// Muestra el balance numerico, media y canal de obtencion
 export function renderizarMetricas(contenedor, total, media, estados, origen = '') {
   if (!contenedor) return;
   if (total === 0 || media === null) {
@@ -93,13 +104,21 @@ export function renderizarCatalogo(contenedorGrid, animes, opciones = {}) {
   if (!contenedorGrid) return;
   contenedorGrid.replaceChildren();
 
-  const { onVerDetalle, onToggleFavorito, esFavoritoFn } = opciones;
+  const { onVerDetalle, onToggleFavorito, esFavoritoFn, terminoBusqueda, soloFavoritos } = opciones;
 
-  // Renderizado seguro del mensaje de lista vacia
+  // Mensaje de vacio adaptado segun la naturaleza del filtro
   if (!animes || animes.length === 0) {
     const msgVacio = document.createElement('p');
     msgVacio.className = 'status-empty';
-    msgVacio.textContent = 'No se encontraron resultados para los filtros seleccionados.';
+
+    if (terminoBusqueda) {
+      msgVacio.textContent = `No se encontraron animes para "${terminoBusqueda}". Prueba con otro término.`;
+    } else if (soloFavoritos) {
+      msgVacio.textContent = 'No tienes ningún anime guardado en favoritos todavía.';
+    } else {
+      msgVacio.textContent = 'No se encontraron resultados para los filtros seleccionados.';
+    }
+
     contenedorGrid.appendChild(msgVacio);
     return;
   }
@@ -114,7 +133,6 @@ export function renderizarCatalogo(contenedorGrid, animes, opciones = {}) {
     img.src = anime.imagen ?? PLACEHOLDER_IMG;
     img.alt = anime.titulo;
     img.loading = 'lazy';
-    // Reemplaza por placeholder si falla la carga remota
     img.onerror = () => {
       img.src = PLACEHOLDER_IMG;
       img.onerror = null;
@@ -138,7 +156,7 @@ export function renderizarCatalogo(contenedorGrid, animes, opciones = {}) {
 
     const rating = document.createElement('span');
     rating.className = 'anime-rating';
-    rating.textContent = anime.rating !== null ? `★ ${anime.rating}%` : 'N/A';
+    rating.textContent = anime.rating !== null ? `★ ${anime.rating}%` : 'Sin calificación';
 
     const ep = document.createElement('span');
     ep.className = 'badge-ep';
@@ -157,7 +175,6 @@ export function renderizarCatalogo(contenedorGrid, animes, opciones = {}) {
       ? `${anime.sinopsis.slice(0, 120)}...` 
       : anime.sinopsis;
 
-    // Fila de acciones interactivas de la tarjeta
     const acciones = document.createElement('div');
     acciones.className = 'anime-actions';
 
@@ -189,7 +206,7 @@ export function renderizarCatalogo(contenedorGrid, animes, opciones = {}) {
   contenedorGrid.appendChild(fragmento);
 }
 
-// Abre el modal mostrando la ficha completa del anime
+// Despliega el modal mostrando la ficha completa
 export function abrirModalDetalle(modal, modalBody, anime) {
   if (!modal || !modalBody || !anime) return;
   modalBody.replaceChildren();
@@ -254,7 +271,7 @@ export function abrirModalDetalle(modal, modalBody, anime) {
   modal.showModal();
 }
 
-// Cierra el modal de detalle
+// Cierra la visualizacion del modal
 export function cerrarModalDetalle(modal) {
   if (modal && typeof modal.close === 'function') {
     modal.close();
