@@ -41,10 +41,8 @@ function ContenidoDetalle({
   const [ritmoEpisodiosDia, setRitmoEpisodiosDia] = useState(3);
   const [imgFallida, setImgFallida] = useState(false);
 
-  const urlPoster =
-    !imgFallida && (anime.imagenGrande ?? anime.imagen)
-      ? (anime.imagenGrande ?? anime.imagen!)
-      : PLACEHOLDER_IMG;
+  const imagenDisponible = anime.imagenGrande ?? anime.imagen;
+  const urlPoster = !imgFallida && imagenDisponible ? imagenDisponible : PLACEHOLDER_IMG;
 
   const numEpisodios =
     typeof anime.episodios === 'number' ? anime.episodios : null;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { CategoriaExplorar, FiltroEstado } from '../types/anime';
 
 export interface EstadoFiltros {
@@ -46,57 +46,60 @@ export function useFiltros(): {
 } {
   const [filtros, setFiltros] = useState<EstadoFiltros>(FILTROS_INICIALES);
 
-  const accionesFiltros: AccionesFiltros = {
-    setTextoInput: (textoInput) => {
-      setFiltros((prev) => ({ ...prev, textoInput }));
-    },
-    cambiarCategoria: (nuevaCategoria) => {
-      setFiltros((prev) => ({
-        ...prev,
-        categoriaActiva: nuevaCategoria,
-        terminoBusqueda: '',
-        textoInput: '',
-        filtroLocal: '',
-      }));
-    },
-    buscarTermino: (termino) => {
-      const limpio = termino.trim();
-      setFiltros((prev) => ({
-        ...prev,
-        categoriaActiva: limpio.length > 0 ? 'busqueda' : 'populares',
-        terminoBusqueda: limpio,
-        textoInput: limpio,
-        filtroLocal: '',
-      }));
-    },
-    setFiltroLocal: (filtroLocal) => {
-      setFiltros((prev) => ({ ...prev, filtroLocal }));
-    },
-    toggleOrden: () => {
-      setFiltros((prev) => ({
-        ...prev,
-        ordenDescendente: !prev.ordenDescendente,
-      }));
-    },
-    setNotaMinima: (notaMinima) => {
-      setFiltros((prev) => ({ ...prev, notaMinima }));
-    },
-    setEstadoFiltro: (estadoFiltro) => {
-      setFiltros((prev) => ({ ...prev, estadoFiltro }));
-    },
-    toggleSoloFavoritos: () => {
-      setFiltros((prev) => ({ ...prev, soloFavoritos: !prev.soloFavoritos }));
-    },
-    resetFiltros: () => {
-      setFiltros((prev) => ({
-        ...FILTROS_INICIALES,
-        categoriaActiva:
-          prev.categoriaActiva === 'busqueda'
-            ? 'populares'
-            : prev.categoriaActiva,
-      }));
-    },
-  };
+  const accionesFiltros = useMemo<AccionesFiltros>(
+    () => ({
+      setTextoInput: (textoInput) => {
+        setFiltros((prev) => ({ ...prev, textoInput }));
+      },
+      cambiarCategoria: (nuevaCategoria) => {
+        setFiltros((prev) => ({
+          ...prev,
+          categoriaActiva: nuevaCategoria,
+          terminoBusqueda: '',
+          textoInput: '',
+          filtroLocal: '',
+        }));
+      },
+      buscarTermino: (termino) => {
+        const limpio = termino.trim();
+        setFiltros((prev) => ({
+          ...prev,
+          categoriaActiva: limpio.length > 0 ? 'busqueda' : 'populares',
+          terminoBusqueda: limpio,
+          textoInput: limpio,
+          filtroLocal: '',
+        }));
+      },
+      setFiltroLocal: (filtroLocal) => {
+        setFiltros((prev) => ({ ...prev, filtroLocal }));
+      },
+      toggleOrden: () => {
+        setFiltros((prev) => ({
+          ...prev,
+          ordenDescendente: !prev.ordenDescendente,
+        }));
+      },
+      setNotaMinima: (notaMinima) => {
+        setFiltros((prev) => ({ ...prev, notaMinima }));
+      },
+      setEstadoFiltro: (estadoFiltro) => {
+        setFiltros((prev) => ({ ...prev, estadoFiltro }));
+      },
+      toggleSoloFavoritos: () => {
+        setFiltros((prev) => ({ ...prev, soloFavoritos: !prev.soloFavoritos }));
+      },
+      resetFiltros: () => {
+        setFiltros((prev) => ({
+          ...FILTROS_INICIALES,
+          categoriaActiva:
+            prev.categoriaActiva === 'busqueda'
+              ? 'populares'
+              : prev.categoriaActiva,
+        }));
+      },
+    }),
+    []
+  );
 
   return { filtros, accionesFiltros };
 }

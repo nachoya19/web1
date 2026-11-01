@@ -4,6 +4,27 @@ import { PLACEHOLDER_IMG } from '../utils/logic';
 import AnimeBadges from './AnimeBadges';
 import ModalDialog from './ModalDialog';
 
+interface FighterCardProps {
+  anime: Anime;
+  esGanador: boolean;
+}
+
+/**
+ * Subcomponente desacoplado para representar cada anime contendiente en la arena VS.
+ */
+function FighterCard({ anime, esGanador }: FighterCardProps) {
+  return (
+    <div
+      className={`compare-fighter-card ${esGanador ? 'fighter-winner' : ''}`}
+    >
+      <img src={anime.imagen ?? PLACEHOLDER_IMG} alt={anime.titulo} />
+      <h3>{anime.titulo}</h3>
+      <AnimeBadges anime={anime} />
+      {esGanador && <span className="winner-pill">Mejor valoración</span>}
+    </div>
+  );
+}
+
 interface AnimeCompareModalProps {
   seleccionados: Anime[];
   abierto: boolean;
@@ -21,10 +42,14 @@ export default function AnimeCompareModal({
 }: AnimeCompareModalProps) {
   const tituloId = useId();
   const [animeA, animeB] = seleccionados;
+
   const ratingA = animeA?.rating ?? 0;
   const ratingB = animeB?.rating ?? 0;
   const epA = typeof animeA?.episodios === 'number' ? animeA.episodios : 0;
   const epB = typeof animeB?.episodios === 'number' ? animeB.episodios : 0;
+
+  const ganaA = ratingA > ratingB;
+  const ganaB = ratingB > ratingA;
 
   return (
     <ModalDialog
@@ -38,32 +63,13 @@ export default function AnimeCompareModal({
         Comparador Cara a Cara (VS)
       </h2>
 
-      {animeA && animeB ? (
+      {!animeA || !animeB ? (
+        <p>Selecciona dos animes del catálogo para ver la comparativa.</p>
+      ) : (
         <div className="compare-arena">
           <div className="compare-fighters">
-            {[animeA, animeB].map((contendiente, idx) => {
-              const otro = idx === 0 ? animeB : animeA;
-              const ganaNota =
-                (contendiente.rating ?? 0) > (otro.rating ?? 0);
-              return (
-                <div
-                  key={contendiente.id}
-                  className={`compare-fighter-card ${
-                    ganaNota ? 'fighter-winner' : ''
-                  }`}
-                >
-                  <img
-                    src={contendiente.imagen ?? PLACEHOLDER_IMG}
-                    alt={contendiente.titulo}
-                  />
-                  <h3>{contendiente.titulo}</h3>
-                  <AnimeBadges anime={contendiente} />
-                  {ganaNota && (
-                    <span className="winner-pill">Mejor valoración</span>
-                  )}
-                </div>
-              );
-            })}
+            <FighterCard anime={animeA} esGanador={ganaA} />
+            <FighterCard anime={animeB} esGanador={ganaB} />
           </div>
 
           <div className="compare-bars">
@@ -104,8 +110,6 @@ export default function AnimeCompareModal({
             </div>
           </div>
         </div>
-      ) : (
-        <p>Selecciona dos animes del catálogo para ver la comparativa.</p>
       )}
     </ModalDialog>
   );

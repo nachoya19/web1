@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { consultarCatalogoKitsu } from '../services/api';
 import type {
   Anime,
@@ -11,7 +12,7 @@ import {
   invalidarEntradaCache,
   obtenerDeCache,
 } from '../utils/storage';
-import { useFetch } from './useFetch';
+import { useFetch, type OpcionesCache } from './useFetch';
 
 export interface ResultadoKitsuFetch {
   status: EstadoPeticion;
@@ -24,16 +25,15 @@ export interface ResultadoKitsuFetch {
 const LISTA_VACIA: Anime[] = [];
 
 /**
- * Hook de dominio que conecta el hook genérico useFetch con la API de Kitsu y su caché TTL.
+ * Hook de dominio que conecta el hook genérico useFetch con la API de Kitsu y su caché con TTL.
+ * Pasa funciones con dependencias reales memoizadas con useCallback y useMemo.
  */
 export function useKitsuFetch(
   categoria: CategoriaExplorar,
   terminoBusqueda: string
 ): ResultadoKitsuFetch {
-  const claveConsulta = `${categoria}::${terminoBusqueda.trim().toLowerCase()}`;
-
-  const { status, data, error, origen, recargar } = useFetch<Anime[]>(
-    async (signal) => {
+  const fetcher = useCallback(
+    async (signal: AbortSignal): Promise<Anime[]> => {
       const brutos = await consultarCatalogoKitsu(
         categoria,
         terminoBusqueda,
@@ -44,9 +44,11 @@ export function useKitsuFetch(
       }
       return normalizarAnimes(brutos);
     },
-    claveConsulta,
-    LISTA_VACIA,
-    {
+    [categoria, terminoBusqueda]
+  );
+
+  const opcionesCache = useMemo<OpcionesCache<Anime[]>>(
+    () => ({
       leer: () => {
         const entrada = obtenerDeCache(categoria, terminoBusqueda);
         return entrada !== null ? normalizarAnimes(entrada.data) : null;
@@ -54,7 +56,14 @@ export function useKitsuFetch(
       invalidar: () => {
         invalidarEntradaCache(categoria, terminoBusqueda);
       },
-    }
+    }),
+    [categoria, terminoBusqueda]
+  );
+
+  const { status, data, error, origen, recargar } = useFetch<Anime[]>(
+    fetcher,
+    LISTA_VACIA,
+    opcionesCache
   );
 
   return {

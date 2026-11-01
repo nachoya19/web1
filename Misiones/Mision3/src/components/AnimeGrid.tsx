@@ -1,34 +1,29 @@
 import { useMemo } from 'react';
 import type { Anime } from '../types/anime';
 import AnimeCard from './AnimeCard';
-import { EmptyState } from './StatusFeedback';
 
 interface AnimeGridProps {
   animes: Anime[];
   cargando: boolean;
   favoritosIds: string[];
   comparandoIds: string[];
-  terminoBusqueda: string;
-  filtroLocal: string;
-  soloFavoritos: boolean;
   onVerDetalle: (anime: Anime) => void;
   onToggleFavorito: (animeId: string) => void;
   onToggleComparar: (animeId: string) => void;
-  onResetFiltros: () => void;
 }
 
+/**
+ * Rejilla de tarjetas de anime. Se enfoca exclusivamente en renderizar la colección
+ * con Sets memoizados para un look-up O(1) de favoritos y elementos en comparación.
+ */
 export default function AnimeGrid({
   animes,
   cargando,
   favoritosIds,
   comparandoIds,
-  terminoBusqueda,
-  filtroLocal,
-  soloFavoritos,
   onVerDetalle,
   onToggleFavorito,
   onToggleComparar,
-  onResetFiltros,
 }: AnimeGridProps) {
   const setFavs = useMemo(
     () => new Set(favoritosIds.map(String)),
@@ -38,17 +33,6 @@ export default function AnimeGrid({
     () => new Set(comparandoIds.map(String)),
     [comparandoIds]
   );
-
-  if (animes.length === 0) {
-    return (
-      <EmptyState
-        terminoBusqueda={terminoBusqueda}
-        filtroLocal={filtroLocal}
-        soloFavoritos={soloFavoritos}
-        onResetFiltros={onResetFiltros}
-      />
-    );
-  }
 
   return (
     <section

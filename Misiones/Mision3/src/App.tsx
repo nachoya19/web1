@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import AnimeCompareModal from './components/AnimeCompareModal';
 import AnimeDetailModal from './components/AnimeDetailModal';
 import AnimeGrid from './components/AnimeGrid';
@@ -7,29 +7,27 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import SearchControls from './components/SearchControls';
 import StatsRibbon from './components/StatsRibbon';
-import { ErrorBanner, LoadingSpinner } from './components/StatusFeedback';
+import {
+  EmptyState,
+  ErrorBanner,
+  LoadingSpinner,
+} from './components/StatusFeedback';
+import { useAnimesVisibles } from './hooks/useAnimesVisibles';
 import { useFiltros } from './hooks/useFiltros';
 import { useKitsuFetch } from './hooks/useKitsuFetch';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import type { Anime } from './types/anime';
-import {
-  filtrarPorEstado,
-  filtrarPorFavoritos,
-  filtrarPorRatingMinimo,
-  filtrarPorTextoLocal,
-  ordenarPorRating,
-} from './utils/logic';
 import { COMPARANDO_KEY, FAVORITOS_KEY } from './utils/storage';
 
 export default function App() {
   // Estado de exploración y filtros agrupado en un custom hook dedicado
   const { filtros, accionesFiltros } = useFiltros();
 
-  // Estado mínimo de UI para la apertura de los modales
+  // Estado mínimo de UI para apertura de modales
   const [animeDetalle, setAnimeDetalle] = useState<Anime | null>(null);
   const [comparadorAbierto, setComparadorAbierto] = useState(false);
 
-  // Persistencia de IDs de favoritos y de comparación en localStorage
+  // Persistencia de IDs de favoritos y comparación en localStorage
   const [favoritosIds, setFavoritosIds] = useLocalStorage<string[]>(
     FAVORITOS_KEY,
     []
@@ -39,62 +37,61 @@ export default function App() {
     []
   );
 
-  // Sincronización con la API de Kitsu usando el hook basado en useFetch + useReducer
+  // Sincronización asíncrona con Kitsu API a través de useFetch + useReducer
   const { status, animes, error, origen, recargar } = useKitsuFetch(
     filtros.categoriaActiva,
     filtros.terminoBusqueda
   );
 
-  // Valores derivados calculados durante el render (sin estado redundante ni useEffect)
-  const filtradosPorNota = filtrarPorRatingMinimo(animes, filtros.notaMinima);
-  const filtradosPorEstado = filtrarPorEstado(
-    filtradosPorNota,
-    filtros.estadoFiltro
-  );
-  const filtradosPorFavs = filtros.soloFavoritos
-    ? filtrarPorFavoritos(filtradosPorEstado, favoritosIds)
-    : filtradosPorEstado;
-  const filtradosLocalmente = filtrarPorTextoLocal(
-    filtradosPorFavs,
-    filtros.filtroLocal
-  );
-  const animesVisibles = ordenarPorRating(
-    filtradosLocalmente,
-    filtros.ordenDescendente
-  );
+  // Cadena de filtrado y ordenación delegada en el hook especializado useAnimesVisibles
+  const animesVisibles = useAnimesVisibles(animes, filtros, favoritosIds);
 
-  // Deriva los objetos Anime seleccionados para comparar a partir de sus IDs
+  // Deriva los objetos completos de Anime seleccionados a partir de los IDs
   const animesComparando = comparandoIds.flatMap((id) => {
     const encontrado = animes.find((a) => String(a.id) === String(id));
     return encontrado ? [encontrado] : [];
   });
 
-  function manejarToggleFavorito(animeId: string) {
-    const idStr = String(animeId);
-    setFavoritosIds((prev) =>
-      prev.includes(idStr)
-        ? prev.filter((id) => id !== idStr)
-        : [...prev, idStr]
-    );
-  }
+  const manejarToggleFavorito = useCallback(
+    (animeId: string) => {
+      const idStr = String(animeId);
+      setFavoritosIds((prev) =>
+        prev.includes(idStr)
+          ? prev.filter((id) => id !== idStr)
+          : [...prev, idStr]
+      );
+    },
+    [setFavoritosIds]
+  );
 
-  function manejarToggleComparar(animeId: string) {
-    const idStr = String(animeId);
-    setComparandoIds((prev) => {
-      if (prev.includes(idStr)) {
-        return prev.filter((id) => id !== idStr);
-      }
-      if (prev.length >= 2) {
-        return [prev[1], idStr];
-      }
-      return [...prev, idStr];
-    });
-  }
+  const manejarToggleComparar = useCallback(
+    (animeId: string) => {
+      const idStr = String(animeId);
+      setComparandoIds((prev) => {
+        if (prev.includes(idStr)) {
+          return prev.filter((id) => id !== idStr);
+        }
+        if (prev.length >= 2) {
+          return [prev[1], idStr];
+        }
+        return [...prev, idStr];
+      });
+    },
+    [setComparandoIds]
+  );
 
-  function manejarQuitarDeComparacion(animeId: string) {
-    const idStr = String(animeId);
-    setComparandoIds((prev) => prev.filter((id) => id !== idStr));
-  }
+  const manejarQuitarDeComparacion = useCallback(
+    (animeId: string) => {
+      const idStr = String(animeId);
+      setComparandoIds((prev) => prev.filter((id) => id !== idStr));
+    },
+    [setComparandoIds]
+  );
+
+  const manejarLimpiarComparacion = useCallback(() => {
+    setComparandoIds([]);
+    setComparadorAbierto(false);
+  }, [setComparandoIds]);
 
   function renderContenidoCatalogo() {
     if (status === 'loading' && animes.length === 0) {
@@ -115,19 +112,24 @@ export default function App() {
           origen={origen}
           onRefrescarRed={() => recargar(true)}
         />
-        <AnimeGrid
-          animes={animesVisibles}
-          cargando={status === 'loading'}
-          favoritosIds={favoritosIds}
-          comparandoIds={comparandoIds}
-          terminoBusqueda={filtros.terminoBusqueda}
-          filtroLocal={filtros.filtroLocal}
-          soloFavoritos={filtros.soloFavoritos}
-          onVerDetalle={(anime) => setAnimeDetalle(anime)}
-          onToggleFavorito={manejarToggleFavorito}
-          onToggleComparar={manejarToggleComparar}
-          onResetFiltros={accionesFiltros.resetFiltros}
-        />
+        {animesVisibles.length === 0 ? (
+          <EmptyState
+            terminoBusqueda={filtros.terminoBusqueda}
+            filtroLocal={filtros.filtroLocal}
+            soloFavoritos={filtros.soloFavoritos}
+            onResetFiltros={accionesFiltros.resetFiltros}
+          />
+        ) : (
+          <AnimeGrid
+            animes={animesVisibles}
+            cargando={status === 'loading'}
+            favoritosIds={favoritosIds}
+            comparandoIds={comparandoIds}
+            onVerDetalle={(anime) => setAnimeDetalle(anime)}
+            onToggleFavorito={manejarToggleFavorito}
+            onToggleComparar={manejarToggleComparar}
+          />
+        )}
       </>
     );
   }
@@ -166,10 +168,7 @@ export default function App() {
         seleccionados={animesComparando}
         onAbrirComparador={() => setComparadorAbierto(true)}
         onQuitarDeComparacion={manejarQuitarDeComparacion}
-        onLimpiarComparacion={() => {
-          setComparandoIds([]);
-          setComparadorAbierto(false);
-        }}
+        onLimpiarComparacion={manejarLimpiarComparacion}
       />
 
       <AnimeCompareModal

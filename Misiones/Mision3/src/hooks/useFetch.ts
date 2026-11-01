@@ -42,9 +42,10 @@ function fetchReducer<T>(
   }
 }
 
-export interface AdaptadorCache<T> {
+export interface OpcionesCache<T> {
   leer: () => T | null;
-  invalidar: () => void;
+  guardar?: (datos: T) => void;
+  invalidar?: () => void;
 }
 
 export interface ResultadoUseFetch<T> extends EstadoGenericoFetch<T> {
@@ -52,41 +53,50 @@ export interface ResultadoUseFetch<T> extends EstadoGenericoFetch<T> {
 }
 
 /**
- * Custom hook genérico y reutilizable para gestionar peticiones asíncronas.
- * Centraliza el estado con useReducer (evitando combinaciones imposibles),
- * gestiona la cancelación mediante AbortController en el cleanup y admite caché opcional.
+ * Custom hook genérico y reutilizable para peticiones asíncronas con useReducer y AbortController.
+ * Inicializa sincronizadamente desde caché si está disponible para evitar saltos de loading/success
+ * y declara dependencias reales sin artificios de refs desincronizados.
  */
 export function useFetch<T>(
   fetcher: (signal: AbortSignal) => Promise<T>,
-  claveDependencia: string,
   valorInicial: T,
-  cache?: AdaptadorCache<T>
+  opcionesCache?: OpcionesCache<T>
 ): ResultadoUseFetch<T> {
-  const [estado, dispatch] = useReducer(fetchReducer<T>, {
-    status: 'loading',
-    data: valorInicial,
-    error: null,
-    origen: null,
-  });
+  const [estado, dispatch] = useReducer(
+    fetchReducer<T>,
+    null,
+    (): EstadoGenericoFetch<T> => {
+      const enCache = opcionesCache?.leer();
+      if (enCache !== null && enCache !== undefined) {
+        return {
+          status: 'success',
+          data: enCache,
+          error: null,
+          origen: 'Caché local (0 ms)',
+        };
+      }
+      return {
+        status: 'loading',
+        data: valorInicial,
+        error: null,
+        origen: null,
+      };
+    }
+  );
+
   const [recargarKey, setRecargarKey] = useState(0);
-
-  const fetcherRef = useRef(fetcher);
-  const cacheRef = useRef(cache);
-
-  useEffect(() => {
-    fetcherRef.current = fetcher;
-    cacheRef.current = cache;
-  });
+  const forzarRedRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
+    const forzarRed = forzarRedRef.current;
+    forzarRedRef.current = false;
 
     async function ejecutar() {
-      dispatch({ tipo: 'INICIAR_CARGA' });
-
-      try {
-        const datosEnCache = cacheRef.current ? cacheRef.current.leer() : null;
+      // Si no se fuerza la red, revisamos si la caché ya contiene los datos válidos
+      if (!forzarRed && opcionesCache) {
+        const datosEnCache = opcionesCache.leer();
         if (datosEnCache !== null) {
           if (!signal.aborted) {
             dispatch({
@@ -99,9 +109,15 @@ export function useFetch<T>(
           }
           return;
         }
+      }
 
-        const resultadoRed = await fetcherRef.current(signal);
+      dispatch({ tipo: 'INICIAR_CARGA' });
+
+      try {
+        const resultadoRed = await fetcher(signal);
         if (signal.aborted) return;
+
+        opcionesCache?.guardar?.(resultadoRed);
 
         dispatch({
           tipo: 'EXITO_CARGA',
@@ -127,11 +143,12 @@ export function useFetch<T>(
     return () => {
       controller.abort();
     };
-  }, [claveDependencia, recargarKey]);
+  }, [fetcher, recargarKey, opcionesCache]);
 
   function recargar(forzarRed = false) {
     if (forzarRed) {
-      cacheRef.current?.invalidar();
+      forzarRedRef.current = true;
+      opcionesCache?.invalidar?.();
     }
     setRecargarKey((c) => c + 1);
   }
