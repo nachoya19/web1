@@ -59,3 +59,4 @@ export interface EstadisticasCatalogo {
   porEstado: Record<string, number>;
   totalEpisodiosConocidos: number;
 }
+

@@ -1,26 +1,26 @@
-# 📡 Kitsu Anime Radar — M3 · Reactor Core
+# Kitsu Anime Radar — M3 · Reactor Core
 
 > **«Todo es un componente.»**  
 > Reconstrucción y evolución en **React 19 + TypeScript** del explorador de anime conectado a la API oficial de **Kitsu**, aplicando arquitectura declarativa, descomposición modular, estado mínimo con valores derivados y *custom hooks* reutilizables.
 
 ---
 
-## 🚀 Características Principales
+## Características Principales
 
-- **Exploración en Tiempo Real y por Categorías:** Consulta de animes en tendencia (`🔥 En tendencia`), mejor valorados (`🏆 Mejor valorados`), en emisión (`📺 En emisión popular`) y búsqueda abierta por texto contra `https://kitsu.app/api/edge`.
-- **Caché Inteligente con TTL (20 min):** Almacenamiento local con control de caducidad, liberación automática de cuota e indicador en vivo del origen de los datos (`⚡ Caché local (0 ms)` vs `🌐 API en directo`), con botón para forzar la sincronización desde red.
+- **Exploración en Tiempo Real y por Categorías:** Consulta de animes en tendencia (` En tendencia`), mejor valorados (` Mejor valorados`), en emisión (`📺 En emisión popular`) y búsqueda abierta por texto contra `https://kitsu.app/api/edge`.
+- **Caché Inteligente con TTL (20 min):** Almacenamiento local con control de caducidad, liberación automática de cuota e indicador en vivo del origen de los datos (`⚡ Caché local (0 ms)` vs ` API en directo`), con botón para forzar la sincronización desde red.
 - **Filtrado Multicriterio y Ordenación Inmutable:** Combinación reactiva de filtro rápido en pantalla, nota mínima (`70%`, `80%`, `85%`), estado de emisión (`En emisión`, `Finalizado`), vista de favoritos y ordenación ascendente/descendente (`[...lista].sort()`).
 - **★ BONUS — Custom Hooks Reutilizables:**
   - `useKitsuFetch`: Encapsula la máquina de estados asíncrona con `useReducer` (`status: 'idle' | 'loading' | 'success' | 'error'`) y `useEffect` con `AbortController` en la función de limpieza (*cleanup*).
   - `useLocalStorage`: Sincroniza el estado de favoritos con `localStorage` empleando *lazy initialization* en `useState`.
-- **✨ Interacciones Originales:**
+- **Interacciones Originales:**
   - **Comparador Cara a Cara (VS):** Selecciona hasta 2 animes desde sus tarjetas para enfrentarlos en un modal visual que compara valoración de la comunidad, episodios y año de estreno.
   - **Calculadora de Maratón:** Integrada en la ficha modal de cada anime; permite ajustar tu ritmo diario de episodios (`1–12 ep./día`) y deriva al instante las horas totales y los días necesarios para completarlo.
 - **Accesibilidad Cuidada:** Uso del elemento nativo `<dialog>` en el *Top Layer* con soporte de *light-dismiss* (`closedby="any"` y *fallback* de coordenadas), `aria-pressed` en botones de filtro/pestañas y regiones `role="status"` / `role="alert"`.
 
 ---
 
-## 🧱 Estructura del Proyecto y Árbol de Componentes
+##  Estructura del Proyecto y Árbol de Componentes
 
 ```text
 Mision3/
@@ -58,7 +58,7 @@ Mision3/
 
 ---
 
-## 🧠 Decisiones Técnicas (Unidad 3 · React Core)
+##  Decisiones Técnicas (Unidad 3 · React Core)
 
 1. **Descomposición sin duplicación (`AnimeBadges` y `EmptyState`):**  
    Las insignias de metadatos se extrajeron a `AnimeBadges.tsx` para reutilizarse de forma idéntica en `AnimeCard`, `AnimeDetailModal` y `AnimeCompareModal`.
@@ -71,7 +71,7 @@ Mision3/
 
 ---
 
-## 🛠️ Instalación y Puesta en Marcha
+## Instalación y Puesta en Marcha
 
 ```bash
 # 1. Instalar dependencias
@@ -89,10 +89,9 @@ npm run lint
 
 ---
 
-## 🤖 Declaración de Uso de Inteligencia Artificial (IA)
-
-De acuerdo con las normas académicas de la asignatura, se declara el uso de herramientas de Inteligencia Artificial generativa (asistente de programación) como apoyo durante el desarrollo de esta práctica:
+## Declaración de Uso de Inteligencia Artificial (IA)
 
 - **Resolución de configuración inicial:** Diagnóstico y configuración de TypeScript (`tsconfig.json`, `vite-env.d.ts`) al migrar los archivos de `.jsx` a `.tsx`.
-- **Refactorización arquitectónica a React 19:** Apoyo en la estructuración de los componentes funcionales, tipado de *props* con interfaces de TypeScript y extracción de la lógica imperativa de la Misión 2 hacia los *custom hooks* `useKitsuFetch` y `useLocalStorage`.
-- **Revisión y autoría:** Todo el código generado o sugerido ha sido revisado, comprendido y validado manualmente conforme a los apuntes de la **Unidad 3 (React Core)**, verificando el cumplimiento de las reglas de los hooks, la inmutabilidad del estado y la limpieza de efectos con `AbortController`.
+
+- **Readme:** La IA me ha ayudado a generar el readme
+- **CSS:** La IA se ha encargado de todo el css

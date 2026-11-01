@@ -184,3 +184,4 @@ export default function AnimeDetailModal({
     </dialog>
   );
 }
+

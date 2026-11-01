@@ -958,3 +958,377 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+
+
+.fav-btn.is-fav {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.compare-btn.is-comparing {
+  background: var(--cyan-bg);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+/* Modal de detalle interactivo */
+.anime-dialog {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #111726;
+  color: var(--text-h);
+  padding: 28px;
+  max-width: 720px;
+  width: 90%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+.anime-dialog::backdrop {
+  background: rgba(3, 7, 18, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text-h);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.modal-detail-content {
+  display: flex;
+  gap: 24px;
+}
+
+.modal-poster {
+  width: 220px;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.modal-info h2 {
+  font-size: 22px;
+  margin: 0;
+  color: #fff;
+  padding-right: 28px;
+}
+
+.modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.modal-section-panel h4 {
+  margin: 4px 0 6px 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-h);
+}
+
+.modal-synopsis {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+  max-height: 150px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+/* Calculadora de maratón */
+.binge-calculator {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.binge-slider-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.binge-slider-label input[type='range'] {
+  accent-color: var(--accent);
+  flex: 1;
+  max-width: 180px;
+}
+
+.binge-summary {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.binge-summary strong {
+  color: var(--cyan);
+}
+
+.modal-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.anime-link {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  transition: all 0.2s;
+}
+
+.anime-link:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Barra inferior y Modal del Comparador VS */
+.compare-dock {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(920px, calc(100% - 32px));
+  background: rgba(17, 23, 38, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--cyan-border);
+  border-radius: 12px;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.65);
+  z-index: 20;
+}
+
+.compare-dock-items {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.compare-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cyan-bg);
+  border: 1px solid var(--cyan-border);
+  color: var(--text-h);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+.compare-chip button {
+  background: none;
+  border: none;
+  color: var(--cyan);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+
+.compare-hint {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.compare-dock-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.compare-modal-title {
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-size: 22px;
+}
+
+.compare-arena {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.compare-fighters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.compare-fighter-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.compare-fighter-card.fighter-winner {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+.compare-fighter-card img {
+  width: 110px;
+  height: 155px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.compare-fighter-card h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.winner-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.compare-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compare-metric-row {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.metric-lead {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.dual-bar {
+  display: flex;
+  gap: 6px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-left {
+  background: var(--accent);
+  height: 100%;
+  border-radius: 999px;
+}
+
+.bar-right {
+  background: var(--cyan);
+  height: 100%;
+  border-radius: 999px;
+}
+
+/* Pie de página */
+.app-footer {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.app-footer p {
+  margin: 4px 0;
+}
+
+.app-footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .modal-detail-content {
+    flex-direction: column;
+    align-items: center;
+  }
+  .modal-poster {
+    width: 180px;
+    height: 260px;
+  }
+  .search-input,
+  .local-filter-input {
+    width: 100%;
+  }
+  .compare-fighters {
+    grid-template-columns: 1fr;
+  }
+}

@@ -30,3 +30,4 @@ export function useLocalStorage<T>(
 
   return [valorAlmacenado, setValorAlmacenado];
 }
+

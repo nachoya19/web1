@@ -197,3 +197,4 @@ export function filtrarPorTextoLocal(lista: Anime[], filtroRapido: string): Anim
       anime.año.toLowerCase().includes(limpio)
   );
 }
+

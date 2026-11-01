@@ -108,3 +108,4 @@ export async function consultarCatalogoKitsu(
   }
   return await obtenerPopulares(signal);
 }
+
