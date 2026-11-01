@@ -41,17 +41,21 @@ Mision3/
     │   ├── logic.ts                # Funciones puras (flatMap, reduce, filter, sort)
     │   └── storage.ts              # Gestión de caché local con TTL de 20 minutos
     ├── hooks/
-    │   ├── useKitsuFetch.ts        # Custom hook de consulta asíncrona con useReducer
+    │   ├── useFetch.ts             # Custom hook genérico de peticiones con useReducer
+    │   ├── useKitsuFetch.ts        # Hook de dominio Kitsu con caché TTL sobre useFetch
+    │   ├── useFiltros.ts           # Custom hook que agrupa el estado de filtros y búsqueda
     │   └── useLocalStorage.ts      # Custom hook genérico de persistencia local
     └── components/
         ├── Header.tsx              # Cabecera con contadores rápidos de favoritos y VS
         ├── SearchControls.tsx      # Pestañas, buscador controlado, filtros y sugerencias
         ├── StatsRibbon.tsx         # Cinta de métricas derivadas con .reduce()
-        ├── AnimeGrid.tsx           # Rejilla de tarjetas con keys estables (anime.id)
+        ├── AnimeGrid.tsx           # Rejilla de tarjetas con keys estables y Sets memoizados
         ├── AnimeCard.tsx           # Tarjeta individual de anime
         ├── AnimeBadges.tsx         # Componente compartido de insignias (tipo, nota, ep, año)
-        ├── AnimeDetailModal.tsx    # Modal <dialog> con ficha completa y calculadora
-        ├── AnimeCompareModal.tsx   # Barra flotante y modal comparador VS cara a cara
+        ├── ModalDialog.tsx         # Componente <dialog> reutilizable con light-dismiss
+        ├── AnimeDetailModal.tsx    # Modal de ficha completa y calculadora de maratón
+        ├── CompareDock.tsx         # Barra flotante inferior de selección VS
+        ├── AnimeCompareModal.tsx   # Modal comparador VS cara a cara
         ├── StatusFeedback.tsx      # LoadingSpinner, ErrorBanner y EmptyState compartido
         └── Footer.tsx              # Pie de página informativo
 ```

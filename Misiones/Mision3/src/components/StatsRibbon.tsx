@@ -7,6 +7,13 @@ interface StatsRibbonProps {
   onRefrescarRed: () => void;
 }
 
+function obtenerClaseOrigen(origen: OrigenDatos): string {
+  if (origen && origen.includes('Caché')) {
+    return 'origin-cache';
+  }
+  return 'origin-live';
+}
+
 /**
  * Cinta de métricas derivadas.
  * Calcula todos los agregados durante el render mediante .reduce() sin estado duplicado.
@@ -26,7 +33,11 @@ export default function StatsRibbon({
     .join(' · ');
 
   return (
-    <div className="stats-bar" role="region" aria-label="Resumen estadístico del catálogo">
+    <div
+      className="stats-bar"
+      role="region"
+      aria-label="Resumen estadístico del catálogo"
+    >
       <div className="stats-metrics">
         <span className="stat-item">
           Mostrando <strong>{estadisticas.total}</strong> animes
@@ -41,18 +52,15 @@ export default function StatsRibbon({
         )}
         {estadisticas.totalEpisodiosConocidos > 0 && (
           <span className="stat-item">
-            <strong>{estadisticas.totalEpisodiosConocidos}</strong> ep. acumulados
+            <strong>{estadisticas.totalEpisodiosConocidos}</strong> ep.
+            acumulados
           </span>
         )}
       </div>
 
       {origen !== null && (
         <div className="stats-origin">
-          <span
-            className={`origin-badge ${
-              origen.includes('Caché') ? 'origin-cache' : 'origin-live'
-            }`}
-          >
+          <span className={`origin-badge ${obtenerClaseOrigen(origen)}`}>
             {origen}
           </span>
           <button
@@ -68,4 +76,3 @@ export default function StatsRibbon({
     </div>
   );
 }
-

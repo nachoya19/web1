@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react';
-import type { CategoriaExplorar, FiltroEstado } from '../types/anime';
+import type { FormEvent } from 'react';
+import type { AccionesFiltros, EstadoFiltros } from '../hooks/useFiltros';
+import type { FiltroEstado } from '../types/anime';
 
 const SUGERENCIAS_RAPIDAS = [
   'Attack on Titan',
@@ -10,71 +11,48 @@ const SUGERENCIAS_RAPIDAS = [
 ];
 
 interface SearchControlsProps {
-  categoriaActiva: CategoriaExplorar;
-  terminoBusqueda: string;
-  filtroLocal: string;
-  ordenDescendente: boolean;
-  notaMinima: number;
-  estadoFiltro: FiltroEstado;
-  soloFavoritos: boolean;
+  filtros: EstadoFiltros;
+  acciones: AccionesFiltros;
   cargando: boolean;
-  onCambiarCategoria: (categoria: CategoriaExplorar) => void;
-  onBuscarTermino: (termino: string) => void;
-  onCambiarFiltroLocal: (texto: string) => void;
-  onToggleOrden: () => void;
-  onCambiarNotaMinima: (nota: number) => void;
-  onCambiarEstadoFiltro: (estado: FiltroEstado) => void;
-  onToggleSoloFavoritos: () => void;
 }
 
 export default function SearchControls({
-  categoriaActiva,
-  terminoBusqueda,
-  filtroLocal,
-  ordenDescendente,
-  notaMinima,
-  estadoFiltro,
-  soloFavoritos,
+  filtros,
+  acciones,
   cargando,
-  onCambiarCategoria,
-  onBuscarTermino,
-  onCambiarFiltroLocal,
-  onToggleOrden,
-  onCambiarNotaMinima,
-  onCambiarEstadoFiltro,
-  onToggleSoloFavoritos,
 }: SearchControlsProps) {
-  const [textoInput, setTextoInput] = useState(terminoBusqueda);
+  const {
+    categoriaActiva,
+    terminoBusqueda,
+    textoInput,
+    filtroLocal,
+    ordenDescendente,
+    notaMinima,
+    estadoFiltro,
+    soloFavoritos,
+  } = filtros;
 
   function manejarEnvio(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    const limpio = textoInput.trim();
-    if (limpio.length > 0) {
-      onBuscarTermino(limpio);
-    } else {
-      onCambiarCategoria('populares');
-    }
-  }
-
-  function manejarSugerencia(sugerencia: string) {
-    setTextoInput(sugerencia);
-    onBuscarTermino(sugerencia);
-  }
-
-  function seleccionarCategoria(cat: CategoriaExplorar) {
-    setTextoInput('');
-    onCambiarCategoria(cat);
+    acciones.buscarTermino(textoInput);
   }
 
   return (
-    <section className="controls-wrapper" aria-label="Controles de exploración y filtrado">
+    <section
+      className="controls-wrapper"
+      aria-label="Controles de exploración y filtrado"
+    >
       {/* Pestañas de categoría con aria-pressed */}
-      <div className="category-tabs" role="group" aria-label="Categorías del catálogo">
+      <div
+        className="category-tabs"
+        role="group"
+        aria-label="Categorías del catálogo"
+      >
         <button
           type="button"
           className={`tab-btn ${categoriaActiva === 'populares' ? 'active' : ''}`}
           aria-pressed={categoriaActiva === 'populares'}
-          onClick={() => seleccionarCategoria('populares')}
+          onClick={() => acciones.cambiarCategoria('populares')}
         >
           En tendencia
         </button>
@@ -82,7 +60,7 @@ export default function SearchControls({
           type="button"
           className={`tab-btn ${categoriaActiva === 'mejor_valorados' ? 'active' : ''}`}
           aria-pressed={categoriaActiva === 'mejor_valorados'}
-          onClick={() => seleccionarCategoria('mejor_valorados')}
+          onClick={() => acciones.cambiarCategoria('mejor_valorados')}
         >
           Mejor valorados
         </button>
@@ -90,7 +68,7 @@ export default function SearchControls({
           type="button"
           className={`tab-btn ${categoriaActiva === 'en_emision' ? 'active' : ''}`}
           aria-pressed={categoriaActiva === 'en_emision'}
-          onClick={() => seleccionarCategoria('en_emision')}
+          onClick={() => acciones.cambiarCategoria('en_emision')}
         >
           En emisión popular
         </button>
@@ -103,7 +81,7 @@ export default function SearchControls({
             type="text"
             className="search-input"
             value={textoInput}
-            onChange={(e) => setTextoInput(e.target.value)}
+            onChange={(e) => acciones.setTextoInput(e.target.value)}
             placeholder="Buscar en Kitsu API (ej. Naruto, Bleach)..."
             aria-label="Buscar anime en la API de Kitsu"
             autoComplete="off"
@@ -117,7 +95,7 @@ export default function SearchControls({
           type="search"
           className="local-filter-input"
           value={filtroLocal}
-          onChange={(e) => onCambiarFiltroLocal(e.target.value)}
+          onChange={(e) => acciones.setFiltroLocal(e.target.value)}
           placeholder="Filtrar resultados actuales..."
           aria-label="Filtrar instantáneamente resultados en pantalla"
         />
@@ -125,7 +103,7 @@ export default function SearchControls({
         <button
           type="button"
           className="secondary-btn"
-          onClick={onToggleOrden}
+          onClick={acciones.toggleOrden}
           aria-pressed={!ordenDescendente}
           title="Alternar dirección de ordenación por puntuación"
         >
@@ -135,7 +113,7 @@ export default function SearchControls({
         <select
           className="secondary-btn"
           value={notaMinima}
-          onChange={(e) => onCambiarNotaMinima(Number(e.target.value))}
+          onChange={(e) => acciones.setNotaMinima(Number(e.target.value))}
           aria-label="Filtrar por valoración mínima"
         >
           <option value={0}>Todas las notas</option>
@@ -147,7 +125,9 @@ export default function SearchControls({
         <select
           className="secondary-btn"
           value={estadoFiltro}
-          onChange={(e) => onCambiarEstadoFiltro(e.target.value as FiltroEstado)}
+          onChange={(e) =>
+            acciones.setEstadoFiltro(e.target.value as FiltroEstado)
+          }
           aria-label="Filtrar por estado de emisión"
         >
           <option value="todos">Todos los estados</option>
@@ -158,7 +138,7 @@ export default function SearchControls({
         <button
           type="button"
           className={`secondary-btn ${soloFavoritos ? 'active' : ''}`}
-          onClick={onToggleSoloFavoritos}
+          onClick={acciones.toggleSoloFavoritos}
           aria-pressed={soloFavoritos}
         >
           {soloFavoritos ? 'Mostrando favoritos' : 'Ver favoritos'}
@@ -168,23 +148,23 @@ export default function SearchControls({
       {/* Sugerencias rápidas de consulta */}
       <div className="quick-tags">
         <span className="quick-tags-label">Sugerencias:</span>
-        {SUGERENCIAS_RAPIDAS.map((sugerencia) => (
-          <button
-            key={sugerencia}
-            type="button"
-            className={`tag-chip ${
-              categoriaActiva === 'busqueda' &&
-              terminoBusqueda.toLowerCase() === sugerencia.toLowerCase()
-                ? 'active'
-                : ''
-            }`}
-            onClick={() => manejarSugerencia(sugerencia)}
-          >
-            {sugerencia}
-          </button>
-        ))}
+        {SUGERENCIAS_RAPIDAS.map((sugerencia) => {
+          const esActiva =
+            categoriaActiva === 'busqueda' &&
+            terminoBusqueda.toLowerCase() === sugerencia.toLowerCase();
+          return (
+            <button
+              key={sugerencia}
+              type="button"
+              className={`tag-chip ${esActiva ? 'active' : ''}`}
+              aria-pressed={esActiva}
+              onClick={() => acciones.buscarTermino(sugerencia)}
+            >
+              {sugerencia}
+            </button>
+          );
+        })}
       </div>
     </section>
   );
 }
-

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { Anime } from '../types/anime';
 import AnimeCard from './AnimeCard';
 import { EmptyState } from './StatusFeedback';
@@ -12,7 +13,7 @@ interface AnimeGridProps {
   soloFavoritos: boolean;
   onVerDetalle: (anime: Anime) => void;
   onToggleFavorito: (animeId: string) => void;
-  onToggleComparar: (anime: Anime) => void;
+  onToggleComparar: (animeId: string) => void;
   onResetFiltros: () => void;
 }
 
@@ -29,6 +30,15 @@ export default function AnimeGrid({
   onToggleComparar,
   onResetFiltros,
 }: AnimeGridProps) {
+  const setFavs = useMemo(
+    () => new Set(favoritosIds.map(String)),
+    [favoritosIds]
+  );
+  const setComp = useMemo(
+    () => new Set(comparandoIds.map(String)),
+    [comparandoIds]
+  );
+
   if (animes.length === 0) {
     return (
       <EmptyState
@@ -39,9 +49,6 @@ export default function AnimeGrid({
       />
     );
   }
-
-  const setFavs = new Set(favoritosIds.map(String));
-  const setComp = new Set(comparandoIds.map(String));
 
   return (
     <section
@@ -62,4 +69,3 @@ export default function AnimeGrid({
     </section>
   );
 }
-

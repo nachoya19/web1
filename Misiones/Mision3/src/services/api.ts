@@ -51,10 +51,16 @@ async function realizarPeticion(url: string, signal?: AbortSignal): Promise<Kits
     }
     // Detecta agotamiento del tiempo límite de red
     if (controladorTimeout.signal.aborted) {
-      throw new Error('Tiempo de espera agotado. El servidor de anime tarda demasiado en responder.');
+      throw new Error(
+        'Tiempo de espera agotado. El servidor de anime tarda demasiado en responder.',
+        { cause: error }
+      );
     }
     if (error instanceof TypeError) {
-      throw new Error('Sin conexión con la API de anime. Comprueba tu conexión a internet.');
+      throw new Error(
+        'Sin conexión con la API de anime. Comprueba tu conexión a internet.',
+        { cause: error }
+      );
     }
     throw error;
   } finally {

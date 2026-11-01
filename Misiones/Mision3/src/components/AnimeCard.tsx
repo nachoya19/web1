@@ -9,7 +9,7 @@ interface AnimeCardProps {
   enComparacion: boolean;
   onVerDetalle: (anime: Anime) => void;
   onToggleFavorito: (animeId: string) => void;
-  onToggleComparar: (anime: Anime) => void;
+  onToggleComparar: (animeId: string) => void;
 }
 
 export default function AnimeCard({
@@ -70,7 +70,7 @@ export default function AnimeCard({
             type="button"
             className={`card-btn compare-btn ${enComparacion ? 'is-comparing' : ''}`}
             aria-pressed={enComparacion}
-            onClick={() => onToggleComparar(anime)}
+            onClick={() => onToggleComparar(anime.id)}
             title="Seleccionar para comparar cara a cara"
           >
             {enComparacion ? 'En VS' : 'VS'}

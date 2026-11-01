@@ -3,6 +3,7 @@ import type { CategoriaExplorar, KitsuRawItem } from '../types/anime';
 // Constantes de configuración de almacenamiento en caché con TTL
 const PREFIX = 'kitsu_cache_';
 export const FAVORITOS_KEY = 'kitsu_favoritos';
+export const COMPARANDO_KEY = 'kitsu_comparando';
 const TTL_MS = 20 * 60 * 1000;
 
 export interface EntradaCache {
