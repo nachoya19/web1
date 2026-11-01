@@ -21,10 +21,10 @@ interface ErrorBannerProps {
 export function ErrorBanner({ mensaje, onRetry }: ErrorBannerProps) {
   return (
     <div className="error-box" role="alert">
-      <p className="error-title">⚠️ No se pudo sincronizar el radar</p>
+      <p className="error-title">No se pudo sincronizar el radar</p>
       <p>{mensaje}</p>
       <button type="button" className="retry-btn" onClick={onRetry}>
-        ↻ Reintentar petición
+        Reintentar petición
       </button>
     </div>
   );

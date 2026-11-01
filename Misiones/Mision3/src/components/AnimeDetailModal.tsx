@@ -134,7 +134,7 @@ export default function AnimeDetailModal({
           </PanelSeccion>
 
           {numEpisodios !== null && (
-            <PanelSeccion titulo="⏱️ Calculadora de Maratón">
+            <PanelSeccion titulo="Calculadora de Maratón">
               <div className="binge-calculator">
                 <label className="binge-slider-label">
                   <span>

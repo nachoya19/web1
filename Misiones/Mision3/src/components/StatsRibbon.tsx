@@ -41,7 +41,7 @@ export default function StatsRibbon({
         )}
         {estadisticas.totalEpisodiosConocidos > 0 && (
           <span className="stat-item">
-            🎬 <strong>{estadisticas.totalEpisodiosConocidos}</strong> ep. acumulados
+            <strong>{estadisticas.totalEpisodiosConocidos}</strong> ep. acumulados
           </span>
         )}
       </div>
@@ -53,7 +53,7 @@ export default function StatsRibbon({
               origen.includes('Caché') ? 'origin-cache' : 'origin-live'
             }`}
           >
-            {origen.includes('Caché') ? '⚡' : '🌐'} {origen}
+            {origen}
           </span>
           <button
             type="button"

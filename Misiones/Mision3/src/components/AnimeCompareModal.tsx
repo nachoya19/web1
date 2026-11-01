@@ -82,7 +82,7 @@ export default function AnimeCompareModal({
           ))}
           {seleccionados.length === 1 && (
             <span className="compare-hint">
-              Selecciona 1 anime más con el botón «⚖ VS» para comparar
+              Selecciona 1 anime más con el botón «VS» para comparar
             </span>
           )}
         </div>
@@ -94,7 +94,7 @@ export default function AnimeCompareModal({
             disabled={seleccionados.length < 2}
             onClick={onAbrir}
           >
-            ⚖ Comparar cara a cara ({seleccionados.length}/2)
+            Comparar cara a cara ({seleccionados.length}/2)
           </button>
           <button
             type="button"
@@ -125,7 +125,7 @@ export default function AnimeCompareModal({
         </button>
 
         <h2 id={tituloId} className="compare-modal-title">
-          ⚖ Comparador Cara a Cara (VS)
+          Comparador Cara a Cara (VS)
         </h2>
 
         {animeA && animeB ? (
@@ -149,7 +149,7 @@ export default function AnimeCompareModal({
                     <h3>{contendiente.titulo}</h3>
                     <AnimeBadges anime={contendiente} />
                     {ganaNota && (
-                      <span className="winner-pill">🏆 Mejor valoración</span>
+                      <span className="winner-pill">Mejor valoración</span>
                     )}
                   </div>
                 );

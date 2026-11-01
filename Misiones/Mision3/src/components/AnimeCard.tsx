@@ -73,7 +73,7 @@ export default function AnimeCard({
             onClick={() => onToggleComparar(anime)}
             title="Seleccionar para comparar cara a cara"
           >
-            {enComparacion ? '⚖ En VS' : '⚖ VS'}
+            {enComparacion ? 'En VS' : 'VS'}
           </button>
         </div>
       </div>

@@ -7,8 +7,8 @@
 
 ## Características Principales
 
-- **Exploración en Tiempo Real y por Categorías:** Consulta de animes en tendencia (` En tendencia`), mejor valorados (` Mejor valorados`), en emisión (`📺 En emisión popular`) y búsqueda abierta por texto contra `https://kitsu.app/api/edge`.
-- **Caché Inteligente con TTL (20 min):** Almacenamiento local con control de caducidad, liberación automática de cuota e indicador en vivo del origen de los datos (`⚡ Caché local (0 ms)` vs ` API en directo`), con botón para forzar la sincronización desde red.
+- **Exploración en Tiempo Real y por Categorías:** Consulta de animes en tendencia (`En tendencia`), mejor valorados (`Mejor valorados`), en emisión (`En emisión popular`) y búsqueda abierta por texto contra `https://kitsu.app/api/edge`.
+- **Caché Inteligente con TTL (20 min):** Almacenamiento local con control de caducidad, liberación automática de cuota e indicador en vivo del origen de los datos (`Caché local (0 ms)` vs `API en directo`), con botón para forzar la sincronización desde red.
 - **Filtrado Multicriterio y Ordenación Inmutable:** Combinación reactiva de filtro rápido en pantalla, nota mínima (`70%`, `80%`, `85%`), estado de emisión (`En emisión`, `Finalizado`), vista de favoritos y ordenación ascendente/descendente (`[...lista].sort()`).
 - **★ BONUS — Custom Hooks Reutilizables:**
   - `useKitsuFetch`: Encapsula la máquina de estados asíncrona con `useReducer` (`status: 'idle' | 'loading' | 'success' | 'error'`) y `useEffect` con `AbortController` en la función de limpieza (*cleanup*).

@@ -25,7 +25,7 @@ export default function Header({
             aria-pressed={soloFavoritos}
             title="Alternar vista de tus animes favoritos"
           >
-            ★ Favoritos: <strong>{totalFavoritos}</strong>
+            Favoritos: <strong>{totalFavoritos}</strong>
           </button>
           {totalComparando > 0 && (
             <button
@@ -34,7 +34,7 @@ export default function Header({
               onClick={onAbrirComparador}
               title="Abrir comparador cara a cara"
             >
-              ⚖ Comparador: <strong>{totalComparando}/2</strong>
+              Comparador: <strong>{totalComparando}/2</strong>
             </button>
           )}
         </div>

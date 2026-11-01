@@ -76,7 +76,7 @@ export default function SearchControls({
           aria-pressed={categoriaActiva === 'populares'}
           onClick={() => seleccionarCategoria('populares')}
         >
-          🔥 En tendencia
+          En tendencia
         </button>
         <button
           type="button"
@@ -84,7 +84,7 @@ export default function SearchControls({
           aria-pressed={categoriaActiva === 'mejor_valorados'}
           onClick={() => seleccionarCategoria('mejor_valorados')}
         >
-          🏆 Mejor valorados
+          Mejor valorados
         </button>
         <button
           type="button"
@@ -92,7 +92,7 @@ export default function SearchControls({
           aria-pressed={categoriaActiva === 'en_emision'}
           onClick={() => seleccionarCategoria('en_emision')}
         >
-          📺 En emisión popular
+          En emisión popular
         </button>
       </div>
 
@@ -118,7 +118,7 @@ export default function SearchControls({
           className="local-filter-input"
           value={filtroLocal}
           onChange={(e) => onCambiarFiltroLocal(e.target.value)}
-          placeholder="⚡ Filtrar resultados actuales..."
+          placeholder="Filtrar resultados actuales..."
           aria-label="Filtrar instantáneamente resultados en pantalla"
         />
 
@@ -139,9 +139,9 @@ export default function SearchControls({
           aria-label="Filtrar por valoración mínima"
         >
           <option value={0}>Todas las notas</option>
-          <option value={70}>★ 70% o más</option>
-          <option value={80}>★ 80% o más</option>
-          <option value={85}>★ 85% o más</option>
+          <option value={70}>70% o más</option>
+          <option value={80}>80% o más</option>
+          <option value={85}>85% o más</option>
         </select>
 
         <select
@@ -161,7 +161,7 @@ export default function SearchControls({
           onClick={onToggleSoloFavoritos}
           aria-pressed={soloFavoritos}
         >
-          {soloFavoritos ? '★ Mostrando favoritos' : '☆ Ver favoritos'}
+          {soloFavoritos ? 'Mostrando favoritos' : 'Ver favoritos'}
         </button>
       </div>
 
