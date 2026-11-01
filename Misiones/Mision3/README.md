@@ -82,17 +82,22 @@ Mision3/
 
 ## 🩺 Autopsia del Proyecto (Decisiones Discutibles y Alternativas Descartadas)
 
-A lo largo del desarrollo de la aplicación se evaluaron dos decisiones arquitectónicas clave:
+A lo largo del desarrollo de la aplicación se evaluaron tres decisiones arquitectónicas clave:
 
-### 1. Sincronización de `localStorage` mediante setter explícito vs. `useEffect` con flag de montaje
-- **Alternativa descartada:** Utilizar un `useEffect([clave, valor])` con una referencia mutable (`esPrimerMontaje = useRef(true)`) para evitar sobrescribir el almacenamiento en el render inicial.
-- **Por qué se descartó:** En React 19 bajo `<StrictMode>`, los componentes se montan, desmontan y vuelven a montar en desarrollo para verificar la idempotencia de los efectos. Esta doble ejecución vuelve frágil cualquier bandera booleana en un `ref`, propiciando escrituras redundantes o desincronizaciones en el almacenamiento.  
-- **Decisión adoptada:** Siguiendo la premisa de la documentación oficial (*"You Might Not Need an Effect"*), se eliminó por completo el efecto de `useLocalStorage`. La persistencia se realiza exclusivamente en el callback actualizador devuelto por el hook, escribiendo en `localStorage` únicamente cuando se produce una interacción deliberada del usuario.
+### 1. Pureza del estado en `useLocalStorage` vs. efectos secundarios en el updater
+- **Alternativa descartada:** Ejecutar `seguroSetItem` directamente dentro de la función actualizadora de `setState` (`setValorAlmacenado(prev => { seguroSetItem(...); return siguiente; })`).
+- **Por qué se descartó:** En React, las funciones actualizadoras de estado deben ser estrictamente puras (sin efectos secundarios). En React 19 bajo `<StrictMode>`, React ejecuta los updaters dos veces intencionadamente en desarrollo para verificar su pureza, lo que duplicaba las escrituras en almacenamiento.
+- **Decisión adoptada:** La función actualizadora se mantiene 100% pura, y la sincronización con el sistema externo (`localStorage`) se delega legítimamente a un `useEffect` con dependencias explícitas `[clave, valorAlmacenado]`.
 
-### 2. Desacoplamiento de `useFetch` genérico vs. hook monolítico `useKitsuFetch`
-- **Alternativa descartada:** Mantener un único hook especializado que combinara en un solo bloque la llamada `fetch`, la construcción de URLs de Kitsu, la caché con TTL y trucos de referencias (`fetcherRef`, `cacheRef`) sin dependencias declaradas.
-- **Por qué se descartó:** El uso de refs actualizadas en efectos sin dependencias para "engañar" a la regla `react-hooks/exhaustive-deps` oscurece el flujo de dependencias real y provocaba transiciones dobles (`loading` y de inmediato `success`) al existir datos en caché.
-- **Decisión adoptada:** Se dividió en dos capas limpias: un hook `useFetch` completamente agnóstico que inicializa de forma síncrona desde caché con la función inicializadora de `useReducer`, y un hook de dominio `useKitsuFetch` que le proporciona funciones memoizadas con dependencias honestas (`useCallback` y `useMemo`).
+### 2. Permanencia del elemento `<dialog>` en el DOM vs. desmontaje condicional prematuro
+- **Alternativa descartada:** Devolver `null` en `ModalDialog` cuando `abierto` fuese `false` (`if (!abierto) return null`).
+- **Por qué se descartó:** Si el componente se desmonta anticipadamente cuando `abierto` es `false`, el nodo `<dialog>` desaparece del DOM antes de que el `useEffect` pueda invocar `dialog.close()`, convirtiendo la rama de cierre imperativo en código muerto e interrumpiendo las animaciones y eventos nativos de cierre.
+- **Decisión adoptada:** El elemento nativo `<dialog>` permanece montado en el DOM en todo momento, permitiendo que el `useEffect` sincronice limpiamente `showModal()` y `close()` según la prop booleana `abierto`, y renderizando condicionalmente su contenido interno `{abierto ? children : null}`.
+
+### 3. Sincronización declarativa en `useFetch` vs. banderas mutables con `useRef`
+- **Alternativa descartada:** Gestionar la invalidación forzada de red mediante referencias mutables (`forzarRedRef`) y mantener el estado anterior al cambiar de categoría.
+- **Por qué se descartó:** El uso de referencias mutables dentro de los efectos complica la trazabilidad del estado. Además, si el reducer no sincroniza inmediatamente el cambio de clave de consulta en el render, se produce un parpadeo visual mostrando brevemente los animes de la categoría anterior mientras carga la nueva.
+- **Decisión adoptada:** Se implementó un estado declarativo para solicitudes manuales y una sincronización en render en el reducer cuando cambia la clave de consulta, garantizando que el estado transiciona de inmediato y sin lecturas duplicadas de la caché.
 
 ---
 

@@ -1,7 +1,8 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import type { EstadoPeticion, OrigenDatos } from '../types/anime';
 
 export interface EstadoGenericoFetch<T> {
+  claveActual: string;
   status: EstadoPeticion;
   data: T;
   error: string | null;
@@ -9,6 +10,15 @@ export interface EstadoGenericoFetch<T> {
 }
 
 type AccionGenericaFetch<T> =
+  | {
+      tipo: 'REINICIAR_CONSULTA';
+      payload: {
+        clave: string;
+        data: T;
+        status: EstadoPeticion;
+        origen: OrigenDatos;
+      };
+    }
   | { tipo: 'INICIAR_CARGA' }
   | { tipo: 'EXITO_CARGA'; payload: { data: T; origen: OrigenDatos } }
   | { tipo: 'ERROR_CARGA'; payload: string };
@@ -18,6 +28,14 @@ function fetchReducer<T>(
   accion: AccionGenericaFetch<T>
 ): EstadoGenericoFetch<T> {
   switch (accion.tipo) {
+    case 'REINICIAR_CONSULTA':
+      return {
+        claveActual: accion.payload.clave,
+        status: accion.payload.status,
+        data: accion.payload.data,
+        error: null,
+        origen: accion.payload.origen,
+      };
     case 'INICIAR_CARGA':
       return {
         ...estado,
@@ -26,6 +44,7 @@ function fetchReducer<T>(
       };
     case 'EXITO_CARGA':
       return {
+        ...estado,
         status: 'success',
         data: accion.payload.data,
         error: null,
@@ -48,16 +67,22 @@ export interface OpcionesCache<T> {
   invalidar?: () => void;
 }
 
-export interface ResultadoUseFetch<T> extends EstadoGenericoFetch<T> {
+export interface ResultadoUseFetch<T> {
+  status: EstadoPeticion;
+  data: T;
+  error: string | null;
+  origen: OrigenDatos;
   recargar: (forzarRed?: boolean) => void;
 }
 
 /**
  * Custom hook genérico y reutilizable para peticiones asíncronas con useReducer y AbortController.
- * Inicializa sincronizadamente desde caché si está disponible para evitar saltos de loading/success
- * y declara dependencias reales sin artificios de refs desincronizados.
+ * - Sincroniza la clave de consulta para resetear el estado de inmediato y evitar mostrar datos obsoletos al cambiar de categoría.
+ * - Elimina refs mutables gestionando la intención de recarga forzada de forma declarativa.
+ * - Evita lecturas duplicadas de caché verificando de antemano el estado sincronizado.
  */
 export function useFetch<T>(
+  clave: string,
   fetcher: (signal: AbortSignal) => Promise<T>,
   valorInicial: T,
   opcionesCache?: OpcionesCache<T>
@@ -66,9 +91,10 @@ export function useFetch<T>(
     fetchReducer<T>,
     null,
     (): EstadoGenericoFetch<T> => {
-      const enCache = opcionesCache?.leer();
-      if (enCache !== null && enCache !== undefined) {
+      const enCache = opcionesCache?.leer() ?? null;
+      if (enCache !== null) {
         return {
+          claveActual: clave,
           status: 'success',
           data: enCache,
           error: null,
@@ -76,6 +102,7 @@ export function useFetch<T>(
         };
       }
       return {
+        claveActual: clave,
         status: 'loading',
         data: valorInicial,
         error: null,
@@ -84,34 +111,43 @@ export function useFetch<T>(
     }
   );
 
-  const [recargarKey, setRecargarKey] = useState(0);
-  const forzarRedRef = useRef(false);
+  // Sincroniza el estado en el render si la clave cambia para evitar mostrar datos de la consulta anterior
+  if (estado.claveActual !== clave) {
+    const enCache = opcionesCache?.leer() ?? null;
+    dispatch({
+      tipo: 'REINICIAR_CONSULTA',
+      payload: {
+        clave,
+        data: enCache !== null ? enCache : valorInicial,
+        status: enCache !== null ? 'success' : 'loading',
+        origen: enCache !== null ? 'Caché local (0 ms)' : null,
+      },
+    });
+  }
+
+  // Estado declarativo para recargas manuales (sin referencias mutables)
+  const [solicitudManual, setSolicitudManual] = useState<{
+    id: number;
+    forzarRed: boolean;
+  }>({
+    id: 0,
+    forzarRed: false,
+  });
 
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
-    const forzarRed = forzarRedRef.current;
-    forzarRedRef.current = false;
+    const esForzado = solicitudManual.forzarRed;
 
     async function ejecutar() {
-      // Si no se fuerza la red, revisamos si la caché ya contiene los datos válidos
-      if (!forzarRed && opcionesCache) {
-        const datosEnCache = opcionesCache.leer();
-        if (datosEnCache !== null) {
-          if (!signal.aborted) {
-            dispatch({
-              tipo: 'EXITO_CARGA',
-              payload: {
-                data: datosEnCache,
-                origen: 'Caché local (0 ms)',
-              },
-            });
-          }
-          return;
-        }
+      // Si no es forzado y el estado ya tiene los datos de la clave actual en caché, no repetimos la petición
+      if (!esForzado && estado.status === 'success' && estado.claveActual === clave) {
+        return;
       }
 
-      dispatch({ tipo: 'INICIAR_CARGA' });
+      if (estado.status !== 'loading') {
+        dispatch({ tipo: 'INICIAR_CARGA' });
+      }
 
       try {
         const resultadoRed = await fetcher(signal);
@@ -143,18 +179,23 @@ export function useFetch<T>(
     return () => {
       controller.abort();
     };
-  }, [fetcher, recargarKey, opcionesCache]);
+  }, [clave, fetcher, solicitudManual, opcionesCache, estado.status, estado.claveActual]);
 
   function recargar(forzarRed = false) {
     if (forzarRed) {
-      forzarRedRef.current = true;
       opcionesCache?.invalidar?.();
     }
-    setRecargarKey((c) => c + 1);
+    setSolicitudManual((prev) => ({
+      id: prev.id + 1,
+      forzarRed,
+    }));
   }
 
   return {
-    ...estado,
+    status: estado.status,
+    data: estado.data,
+    error: estado.error,
+    origen: estado.origen,
     recargar,
   };
 }

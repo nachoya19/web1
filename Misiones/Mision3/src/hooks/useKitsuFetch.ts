@@ -60,7 +60,10 @@ export function useKitsuFetch(
     [categoria, terminoBusqueda]
   );
 
+  const clave = `${categoria}::${terminoBusqueda.trim().toLowerCase()}`;
+
   const { status, data, error, origen, recargar } = useFetch<Anime[]>(
+    clave,
     fetcher,
     LISTA_VACIA,
     opcionesCache

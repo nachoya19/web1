@@ -1,6 +1,12 @@
 import type { FormEvent } from 'react';
 import type { AccionesFiltros, EstadoFiltros } from '../hooks/useFiltros';
-import type { FiltroEstado } from '../types/anime';
+import type { CategoriaExplorar, FiltroEstado } from '../types/anime';
+
+const CATEGORIAS_TABS: Array<{ id: CategoriaExplorar; etiqueta: string }> = [
+  { id: 'populares', etiqueta: 'En tendencia' },
+  { id: 'mejor_valorados', etiqueta: 'Mejor valorados' },
+  { id: 'en_emision', etiqueta: 'En emisión popular' },
+];
 
 const SUGERENCIAS_RAPIDAS = [
   'Attack on Titan',
@@ -42,36 +48,26 @@ export default function SearchControls({
       className="controls-wrapper"
       aria-label="Controles de exploración y filtrado"
     >
-      {/* Pestañas de categoría con aria-pressed */}
+      {/* Pestañas de categoría generadas a partir de un array mapeado */}
       <div
         className="category-tabs"
         role="group"
         aria-label="Categorías del catálogo"
       >
-        <button
-          type="button"
-          className={`tab-btn ${categoriaActiva === 'populares' ? 'active' : ''}`}
-          aria-pressed={categoriaActiva === 'populares'}
-          onClick={() => acciones.cambiarCategoria('populares')}
-        >
-          En tendencia
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${categoriaActiva === 'mejor_valorados' ? 'active' : ''}`}
-          aria-pressed={categoriaActiva === 'mejor_valorados'}
-          onClick={() => acciones.cambiarCategoria('mejor_valorados')}
-        >
-          Mejor valorados
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${categoriaActiva === 'en_emision' ? 'active' : ''}`}
-          aria-pressed={categoriaActiva === 'en_emision'}
-          onClick={() => acciones.cambiarCategoria('en_emision')}
-        >
-          En emisión popular
-        </button>
+        {CATEGORIAS_TABS.map((tab) => {
+          const esActiva = categoriaActiva === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={`tab-btn ${esActiva ? 'active' : ''}`}
+              aria-pressed={esActiva}
+              onClick={() => acciones.cambiarCategoria(tab.id)}
+            >
+              {tab.etiqueta}
+            </button>
+          );
+        })}
       </div>
 
       {/* Formulario de búsqueda en API y controles de filtro */}

@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { seguroSetItem } from '../utils/storage';
 
 /**
  * Custom hook reutilizable para sincronizar un estado de React con localStorage.
  * Utiliza lazy initialization en useState para leer el almacenamiento una sola vez al montar
- * y persiste en localStorage directamente a través del setter, evitando flags de primer montaje
- * frágiles en entornos React 19 con StrictMode.
+ * y sincroniza con localStorage a través de un useEffect con dependencias exactas [clave, valorAlmacenado],
+ * garantizando que los updaters de estado se mantengan 100% puros e idempotentes frente a StrictMode.
  */
 export function useLocalStorage<T>(
   clave: string,
@@ -21,23 +21,14 @@ export function useLocalStorage<T>(
     }
   });
 
-  const actualizarValor = useCallback(
-    (nuevoValor: T | ((anterior: T) => T)) => {
-      setValorAlmacenado((prev) => {
-        const siguiente =
-          typeof nuevoValor === 'function'
-            ? (nuevoValor as (anterior: T) => T)(prev)
-            : nuevoValor;
-        try {
-          seguroSetItem(clave, JSON.stringify(siguiente));
-        } catch {
-          // Ignora errores si el almacenamiento está restringido
-        }
-        return siguiente;
-      });
-    },
-    [clave]
-  );
+  // Sincroniza con el sistema externo manteniendo el updater de setState estrictamente puro
+  useEffect(() => {
+    try {
+      seguroSetItem(clave, JSON.stringify(valorAlmacenado));
+    } catch {
+      // Ignora errores si el almacenamiento está restringido
+    }
+  }, [clave, valorAlmacenado]);
 
-  return [valorAlmacenado, actualizarValor];
+  return [valorAlmacenado, setValorAlmacenado];
 }

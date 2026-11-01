@@ -16,7 +16,8 @@ interface ModalDialogProps {
 
 /**
  * Componente reutilizable para modales basados en el elemento nativo <dialog>.
- * Centraliza la apertura en el Top Layer (showModal), la accesibilidad y el light-dismiss.
+ * Permanece montado en el DOM para sincronizar de forma bidireccional y legítima
+ * showModal() y close() en el useEffect, garantizando accesibilidad y light-dismiss.
  */
 export default function ModalDialog({
   abierto,
@@ -58,10 +59,6 @@ export default function ModalDialog({
     }
   }
 
-  if (!abierto) {
-    return null;
-  }
-
   return (
     <dialog
       ref={dialogRef}
@@ -75,12 +72,11 @@ export default function ModalDialog({
         type="button"
         className="modal-close-btn"
         aria-label={ariaLabelCerrar}
-        onClick={() => dialogRef.current?.close()}
+        onClick={onCerrar}
       >
         ✕
       </button>
-      {children}
+      {abierto ? children : null}
     </dialog>
   );
 }
-

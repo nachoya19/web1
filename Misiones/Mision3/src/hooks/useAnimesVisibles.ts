@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import type { Anime } from '../types/anime';
-import type { EstadoFiltros } from './useFiltros';
+import type { Anime, FiltroEstado } from '../types/anime';
 import {
   filtrarPorEstado,
   filtrarPorFavoritos,
@@ -9,23 +8,47 @@ import {
   ordenarPorRating,
 } from '../utils/logic';
 
+export interface ParametrosVisibles {
+  notaMinima: number;
+  estadoFiltro: FiltroEstado;
+  soloFavoritos: boolean;
+  filtroLocal: string;
+  ordenDescendente: boolean;
+}
+
 /**
  * Custom hook que encapsula la cadena de filtrado y ordenación sobre el catálogo de animes.
- * Aligera App.tsx centralizando las transformaciones puras en una derivación memoizada.
+ * Declara como dependencias los campos primitivos específicos en lugar del objeto completo,
+ * evitando invalidar la memoización cuando el usuario escribe en el campo de búsqueda.
  */
 export function useAnimesVisibles(
   animes: Anime[],
-  filtros: EstadoFiltros,
+  parametros: ParametrosVisibles,
   favoritosIds: string[]
 ): Anime[] {
+  const {
+    notaMinima,
+    estadoFiltro,
+    soloFavoritos,
+    filtroLocal,
+    ordenDescendente,
+  } = parametros;
+
   return useMemo(() => {
-    const porNota = filtrarPorRatingMinimo(animes, filtros.notaMinima);
-    const porEstado = filtrarPorEstado(porNota, filtros.estadoFiltro);
-    const porFavs = filtros.soloFavoritos
+    const porNota = filtrarPorRatingMinimo(animes, notaMinima);
+    const porEstado = filtrarPorEstado(porNota, estadoFiltro);
+    const porFavs = soloFavoritos
       ? filtrarPorFavoritos(porEstado, favoritosIds)
       : porEstado;
-    const porTexto = filtrarPorTextoLocal(porFavs, filtros.filtroLocal);
-    return ordenarPorRating(porTexto, filtros.ordenDescendente);
-  }, [animes, filtros, favoritosIds]);
+    const porTexto = filtrarPorTextoLocal(porFavs, filtroLocal);
+    return ordenarPorRating(porTexto, ordenDescendente);
+  }, [
+    animes,
+    notaMinima,
+    estadoFiltro,
+    soloFavoritos,
+    filtroLocal,
+    ordenDescendente,
+    favoritosIds,
+  ]);
 }
-

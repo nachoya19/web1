@@ -9,6 +9,19 @@ import type {
 export const PLACEHOLDER_IMG =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300" viewBox="0 0 200 300"><rect width="200" height="300" fill="%231a1e2e"/><text x="50%" y="50%" fill="%238a92b2" font-family="sans-serif" font-size="16" text-anchor="middle" dy=".3em">Sin Imagen</text></svg>';
 
+// Tabla de mapeo para evitar ternarios anidados al normalizar el estado de emisión
+const MAPA_ESTADOS_EMISION: Record<string, EstadoEmision> = {
+  current: 'En emisión',
+  finished: 'Finalizado',
+};
+
+function resolverEstadoEmision(status?: string | null): EstadoEmision {
+  if (status && status in MAPA_ESTADOS_EMISION) {
+    return MAPA_ESTADOS_EMISION[status];
+  }
+  return 'TBA';
+}
+
 // Descarta elementos que carecen de títulos válidos
 export function filtrarAnimesValidos(listaBruta: KitsuRawItem[]): KitsuRawItem[] {
   if (!Array.isArray(listaBruta)) return [];
@@ -50,12 +63,7 @@ export function normalizarAnimes(listaBruta: KitsuRawItem[]): Anime[] {
 
     const fechaInicio = attrs.startDate ? attrs.startDate.split('-')[0] : 'N/A';
     const tipoAnime = attrs.subtype ? attrs.subtype.toUpperCase() : 'ANIME';
-    const estadoEmision: EstadoEmision =
-      attrs.status === 'current'
-        ? 'En emisión'
-        : attrs.status === 'finished'
-          ? 'Finalizado'
-          : 'TBA';
+    const estadoEmision: EstadoEmision = resolverEstadoEmision(attrs.status);
 
     const ratingParseado = attrs.averageRating ? Number.parseFloat(attrs.averageRating) : null;
     const ratingValido =

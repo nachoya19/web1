@@ -43,8 +43,18 @@ export default function App() {
     filtros.terminoBusqueda
   );
 
-  // Cadena de filtrado y ordenación delegada en el hook especializado useAnimesVisibles
-  const animesVisibles = useAnimesVisibles(animes, filtros, favoritosIds);
+  // Cadena de filtrado y ordenación pasando dependencias primitivas específicas
+  const animesVisibles = useAnimesVisibles(
+    animes,
+    {
+      notaMinima: filtros.notaMinima,
+      estadoFiltro: filtros.estadoFiltro,
+      soloFavoritos: filtros.soloFavoritos,
+      filtroLocal: filtros.filtroLocal,
+      ordenDescendente: filtros.ordenDescendente,
+    },
+    favoritosIds
+  );
 
   // Deriva los objetos completos de Anime seleccionados a partir de los IDs
   const animesComparando = comparandoIds.flatMap((id) => {
@@ -112,14 +122,15 @@ export default function App() {
           origen={origen}
           onRefrescarRed={() => recargar(true)}
         />
-        {animesVisibles.length === 0 ? (
+        {animesVisibles.length === 0 && (
           <EmptyState
             terminoBusqueda={filtros.terminoBusqueda}
             filtroLocal={filtros.filtroLocal}
             soloFavoritos={filtros.soloFavoritos}
             onResetFiltros={accionesFiltros.resetFiltros}
           />
-        ) : (
+        )}
+        {animesVisibles.length > 0 && (
           <AnimeGrid
             animes={animesVisibles}
             cargando={status === 'loading'}

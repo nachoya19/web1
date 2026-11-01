@@ -25,6 +25,46 @@ function FighterCard({ anime, esGanador }: FighterCardProps) {
   );
 }
 
+interface FighterMetricRowProps {
+  titulo: string;
+  valorA: string | number;
+  valorB: string | number;
+  ganaA?: boolean;
+  ganaB?: boolean;
+  barraA?: number;
+  barraB?: number;
+}
+
+/**
+ * Subcomponente desacoplado para renderizar filas de métricas comparativas
+ * evitando mezclar cálculos y condiciones dentro del JSX principal.
+ */
+function FighterMetricRow({
+  titulo,
+  valorA,
+  valorB,
+  ganaA = false,
+  ganaB = false,
+  barraA,
+  barraB,
+}: FighterMetricRowProps) {
+  return (
+    <div className="compare-metric-row">
+      <div className="metric-header">
+        <span className={ganaA ? 'metric-lead' : ''}>{valorA}</span>
+        <strong>{titulo}</strong>
+        <span className={ganaB ? 'metric-lead' : ''}>{valorB}</span>
+      </div>
+      {typeof barraA === 'number' && typeof barraB === 'number' && (
+        <div className="dual-bar">
+          <div className="bar-left" style={{ width: `${barraA}%` }} />
+          <div className="bar-right" style={{ width: `${barraB}%` }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface AnimeCompareModalProps {
   seleccionados: Anime[];
   abierto: boolean;
@@ -33,7 +73,7 @@ interface AnimeCompareModalProps {
 
 /**
  * Modal dedicado exclusivamente a la comparación cara a cara entre dos animes.
- * Reutiliza el componente común ModalDialog para la lógica del elemento <dialog>.
+ * Reutiliza el componente común ModalDialog y delega en FighterCard y FighterMetricRow.
  */
 export default function AnimeCompareModal({
   seleccionados,
@@ -50,6 +90,9 @@ export default function AnimeCompareModal({
 
   const ganaA = ratingA > ratingB;
   const ganaB = ratingB > ratingA;
+
+  const textoRatingA = animeA?.rating !== null && animeA?.rating !== undefined ? `${animeA.rating}%` : 'N/A';
+  const textoRatingB = animeB?.rating !== null && animeB?.rating !== undefined ? `${animeB.rating}%` : 'N/A';
 
   return (
     <ModalDialog
@@ -73,41 +116,27 @@ export default function AnimeCompareModal({
           </div>
 
           <div className="compare-bars">
-            <div className="compare-metric-row">
-              <div className="metric-header">
-                <span className={ratingA >= ratingB ? 'metric-lead' : ''}>
-                  {animeA.rating !== null ? `${animeA.rating}%` : 'N/A'}
-                </span>
-                <strong>Valoración de la comunidad</strong>
-                <span className={ratingB >= ratingA ? 'metric-lead' : ''}>
-                  {animeB.rating !== null ? `${animeB.rating}%` : 'N/A'}
-                </span>
-              </div>
-              <div className="dual-bar">
-                <div className="bar-left" style={{ width: `${ratingA}%` }} />
-                <div className="bar-right" style={{ width: `${ratingB}%` }} />
-              </div>
-            </div>
-
-            <div className="compare-metric-row">
-              <div className="metric-header">
-                <span className={epA >= epB ? 'metric-lead' : ''}>
-                  {animeA.episodios} ep.
-                </span>
-                <strong>Volumen de episodios</strong>
-                <span className={epB >= epA ? 'metric-lead' : ''}>
-                  {animeB.episodios} ep.
-                </span>
-              </div>
-            </div>
-
-            <div className="compare-metric-row">
-              <div className="metric-header">
-                <span>{animeA.año}</span>
-                <strong>Año de estreno</strong>
-                <span>{animeB.año}</span>
-              </div>
-            </div>
+            <FighterMetricRow
+              titulo="Valoración de la comunidad"
+              valorA={textoRatingA}
+              valorB={textoRatingB}
+              ganaA={ratingA >= ratingB}
+              ganaB={ratingB >= ratingA}
+              barraA={ratingA}
+              barraB={ratingB}
+            />
+            <FighterMetricRow
+              titulo="Volumen de episodios"
+              valorA={`${epA} ep.`}
+              valorB={`${epB} ep.`}
+              ganaA={epA >= epB}
+              ganaB={epB >= epA}
+            />
+            <FighterMetricRow
+              titulo="Año de estreno"
+              valorA={animeA.año}
+              valorB={animeB.año}
+            />
           </div>
         </div>
       )}
