@@ -28,3 +28,4 @@ export function useAnimesVisibles(
     return ordenarPorRating(porTexto, filtros.ordenDescendente);
   }, [animes, filtros, favoritosIds]);
 }
+
