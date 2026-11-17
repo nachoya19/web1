@@ -29,4 +29,4 @@ En `src/services/contacto.js`, `obtenerContactos` valida los datos recibidos con
 
 ## Declaración de uso de IA
 
-Se utilizó un asistente de IA como apoyo puntual para depurar errores de importación, añadir refinamientos de validación en Zod y redactar este README. El código fue revisado y probado manualmente.
+La IA me ayudó a estructurar el formulario, con el CSS y a configurar la API.
