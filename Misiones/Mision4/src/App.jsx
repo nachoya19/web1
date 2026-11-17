@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './App.css'
 import ListaContactos from './components/ListaContactos'
 import FormularioRegistro from './components/FormularioRegistro'
