@@ -1,20 +1,20 @@
-# M4 · Full Contact Forms
+# Torneo de Bádminton · Inscripciones (M4)
 
-Aplicación React para el registro y listado de contactos con validación en cliente y servidor mediante **React Hook Form**, **Zod** y **TanStack Query v5**.
+Aplicación React para gestionar inscripciones a un torneo de bádminton (categoría, modalidad, pareja y club) con validación en cliente y servidor mediante **React Hook Form**, **Zod** y **TanStack Query v5**.
 
 ## Tecnologías
 
 - React 19 + Vite
 - React Hook Form (`register`, `handleSubmit`, `reset`, estados accesibles con `aria-invalid` y `aria-describedby`)
-- Zod + `@hookform/resolvers` (esquema como única fuente de verdad con `.regex()` y `.refine()` cruzado)
+- Zod + `@hookform/resolvers` (esquema como única fuente de verdad con `.regex()` en teléfono y `.refine()` cruzado que exige pareja en dobles o mixtos)
 - TanStack Query v5 (`useQuery`, `useMutation` e invalidación con `invalidateQueries`)
 
 ## Estructura
 
-- `src/schemas/formularioSchema.js`: esquemas Zod del formulario y de la respuesta del API.
+- `src/schemas/formularioSchema.js`: esquemas Zod del formulario de inscripción y de la respuesta del API.
 - `src/services/contacto.js`: peticiones `GET` y `POST` con `fetch` y validación `safeParse`.
-- `src/components/FormularioRegistro.jsx`: formulario accesible con envío por mutación.
-- `src/components/ListaContactos.jsx`: listado remoto con estados de carga, error y simulación de dato corrupto.
+- `src/components/FormularioRegistro.jsx`: formulario accesible de inscripción al torneo.
+- `src/components/ListaContactos.jsx`: listado remoto de jugadores inscritos con estados de carga, error y simulación de dato corrupto.
 
 ## Cómo ejecutar
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Esquema para el formulario de registro (Cliente)
+// Esquema para el formulario de inscripción al torneo de bádminton
 export const esquemaFormulario = z
     .object({
         nombre: z
@@ -16,31 +16,39 @@ export const esquemaFormulario = z
                 /^[+\d\s-]+$/,
                 "El teléfono solo puede contener números, espacios, guiones o +"
             ),
-        categoria: z.enum(["cliente", "proveedor", "socio"], {
+        categoria: z.enum(["iniciacion", "intermedio", "absoluta"], {
             message: "Selecciona una categoría válida",
         }),
-        empresa: z.string().trim().optional(),
-        aceptaTerminos: z.boolean().refine((val) => val === true, {
-            message: "Debes aceptar la política de privacidad",
+        modalidad: z.enum(["individual", "dobles", "mixtos"], {
+            message: "Selecciona una modalidad válida",
+        }),
+        club: z.string().trim().optional(),
+        pareja: z.string().trim().optional(),
+        aceptaReglamento: z.boolean().refine((val) => val === true, {
+            message: "Debes aceptar el reglamento del torneo",
         }),
     })
     .refine(
         (datos) =>
-            datos.categoria !== "proveedor" ||
-            (datos.empresa && datos.empresa.length >= 2),
+            datos.modalidad === "individual" ||
+            (datos.pareja && datos.pareja.length >= 2),
         {
-            message: "La empresa es obligatoria para proveedores (mín. 2 caracteres)",
-            path: ["empresa"],
+            message:
+                "Indica el nombre de tu pareja para dobles o mixtos (mín. 2 caracteres)",
+            path: ["pareja"],
         }
     );
 
-// Esquema para validar un contacto individual recibido del API
+// Esquema para validar un jugador inscrito recibido del API
 export const esquemaContacto = z.object({
     id: z.union([z.string(), z.number()]),
     nombre: z.string().min(1),
     email: z.email(),
     telefono: z.string().optional(),
-    empresa: z.string().optional(),
+    club: z.string().optional(),
+    categoria: z.string().optional(),
+    modalidad: z.string().optional(),
+    pareja: z.string().optional(),
 });
 
 // Esquema para el listado completo del API
