@@ -20,3 +20,19 @@ const res = await fetch("https://jsonplaceholder.typicode.com/users");
 
     return validacion.data;
 }
+
+export async function crearContacto(datos) {
+    const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(datos),
+    });
+
+    if (!res.ok) {
+        throw new Error(`Error HTTP: ${res.status}`);
+    }
+
+    return res.json();
+}
