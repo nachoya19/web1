@@ -11,3 +11,6 @@ Aplicación web desarrollada en React con Vite, React Hook Form, Zod, TanStack Q
 ## Seguridad y Autopsia (Pregunta típica de examen)
 - **Validación**: La validación en cliente con Zod aporta una excelente experiencia de usuario (UX), pero la seguridad real recae en el servidor, ya que el navegador es territorio del usuario y las peticiones pueden alterarse desde DevTools.
 - **Caché y Estado del Servidor**: Se ha evitado el anti-patrón de `fetch` dentro de `useEffect` utilizando TanStack Query para delegar el control de reintentos, caché y refetching.
+
+## Declaración de uso de IA
+La IA me ayudó a estructurar el formulario, con el CSS y a configurar la API. Inicialmente proponía validar el campo `pareja` con estado local o reglas sueltas en el input, pero se descartó y se centralizó esa regla en Zod mediante `.refine()` con `path: ["pareja"]`.
