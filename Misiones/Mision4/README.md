@@ -1,32 +1,13 @@
-# Torneo de Bádminton · Inscripciones (M4)
+# Torneo de Bádminton · App Full Contact Forms
 
-Aplicación React para gestionar inscripciones a un torneo de bádminton (categoría, modalidad, pareja y club) con validación en cliente y servidor mediante **React Hook Form**, **Zod** y **TanStack Query v5**.
+Aplicación web desarrollada en React con Vite, React Hook Form, Zod, TanStack Query v5 y accesibilidad integrada.
 
-## Tecnologías
+## Arquitectura
+- **`src/services/contacto.js`**: Capa de servicios que gestiona peticiones HTTP (`fetch`), comprobación de `response.ok` y validación defensiva con Zod (`safeParse`).
+- **`src/schemas/formularioSchema.js`**: Esquemas de validación Zod reutilizables tanto para el formulario del cliente como para los datos remotos del servidor.
+- **`src/components/FormularioRegistro.jsx`**: Formulario optimizado sin re-renders innecesarios mediante React Hook Form y `zodResolver`, cumpliendo pautas de accesibilidad (`aria-invalid`, `role="alert"`).
+- **`src/components/ListaContactos.jsx`**: Listado reactivo de inscritos consumido mediante TanStack Query con caché automática, deduplicación y simulación de datos corruptos.
 
-- React 19 + Vite
-- React Hook Form (`register`, `handleSubmit`, `reset`, estados accesibles con `aria-invalid` y `aria-describedby`)
-- Zod + `@hookform/resolvers` (esquema como única fuente de verdad con `.regex()` en teléfono y `.refine()` cruzado que exige pareja en dobles o mixtos)
-- TanStack Query v5 (`useQuery`, `useMutation` e invalidación con `invalidateQueries`)
-
-## Estructura
-
-- `src/schemas/formularioSchema.js`: esquemas Zod del formulario de inscripción y de la respuesta del API.
-- `src/services/contacto.js`: peticiones `GET` y `POST` con `fetch` y validación `safeParse`.
-- `src/components/FormularioRegistro.jsx`: formulario accesible de inscripción al torneo.
-- `src/components/ListaContactos.jsx`: listado remoto de jugadores inscritos con estados de carga, error y simulación de dato corrupto.
-
-## Cómo ejecutar
-
-```bash
-npm install
-npm run dev
-```
-
-## Bonus: Validación de respuesta del API con Zod
-
-En `src/services/contacto.js`, `obtenerContactos` valida los datos recibidos con `esquemaListaContactos.safeParse(datos)` antes de devolverlos. En la interfaz puedes pulsar **"Simular dato corrupto"** para comprobar que Zod intercepta un registro inválido (nombre vacío y email mal formado) y muestra el error sin romper la aplicación.
-
-## Declaración de uso de IA
-
-La IA me ayudó a estructurar el formulario, con el CSS y a configurar la API.
+## Seguridad y Autopsia (Pregunta típica de examen)
+- **Validación**: La validación en cliente con Zod aporta una excelente experiencia de usuario (UX), pero la seguridad real recae en el servidor, ya que el navegador es territorio del usuario y las peticiones pueden alterarse desde DevTools.
+- **Caché y Estado del Servidor**: Se ha evitado el anti-patrón de `fetch` dentro de `useEffect` utilizando TanStack Query para delegar el control de reintentos, caché y refetching.
